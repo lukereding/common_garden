@@ -13,6 +13,7 @@ _usage_: python locate_fish.py /path/to/video
 :boom: compute average pairwise distance between fish in each category    
 :boom: create dialogue box that opens so that the user can select the video file    
 :boom: bundle everything into an `.exe` file using py2exe.    
+:boom: extract date from video
 
 #### `chop_videos.sh`
 Used to create 4 5-second videos from the 15 minute videos. Looks like large video files (e.g. ~15 min videos taken from an amazon fire) and extracts 5-sec videos at 1:00, 5:00, 9:00, and 13:00.
