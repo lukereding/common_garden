@@ -251,14 +251,14 @@ def show_video(name):
         while(True):
             # Capture frame-by-frame
             ret, frame = cap.read()
-            cv2.putText(frame,'press q when done',(20,20), cv2.FONT_HERSHEY_SIMPLEX, 1,(130,130,130),2)
+            cv2.putText(frame,'press the escape key when done',(20,20), cv2.FONT_HERSHEY_SIMPLEX, 1,(130,130,130),2)
             try:
                 cv2.imshow(name,frame)
             except:
                 cap = cv2.VideoCapture(name)
                 ret, frame = cap.read()
                 cv2.imshow(name,frame)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+            if cv2.waitKey(20) & 0xFF == 27:
                 break
 
     # When everything done, release the capture
@@ -272,6 +272,15 @@ def get_info(text):
         var = raw_input('please only input a digit: ')
     return var
 
+def check_if_data_dir_exists(p):
+    if not os.path.exists(os.path.join(p,'data')):
+        os.makedirs(os.path.join(p,'data'))
+    return os.path.join(p,'data')
+    
+def check_if_already_watched_exists(p):
+    if not os.path.exists(os.path.join(p,'already_watched')):
+        os.makedirs(os.path.join(p,'already_watched'))
+    return os.path.join(p,'already_watched')
 
 if __name__ == "__main__":
 
@@ -317,6 +326,25 @@ if __name__ == "__main__":
     number_model_female = len(model_female_locations)
     total_fish = number_focal + number_male + number_model_female
     
+    # the videos are named like 'week_of_04_03_2016_SS1_00:01'. let's extract the date and tank id from that
+    path, video = os.path.split(video_name)
+    
+    # make sure it comforms to our naming convention:
+    if len(video.split("_")) == 7:
+        # get date
+        date = video.split('_')[2:5]
+        date = '-'.join(date)
+        
+        # get tank id
+        tank_id = video.split('_')[-2].upper()
+        
+        # get when in the video
+        time_in_video = video.split('_')[-1].split('.')[0]
+    
+    # otherwise, call assign None
+    else:
+        date = tank_id = time_in_video = None    
+    
     # get the data all together in a dictionary
     data = {
     'video_name' : video_name,
@@ -337,31 +365,40 @@ if __name__ == "__main__":
     'number_focal' : number_focal,
     'number_male' : number_male,
     'number_model_female' : number_model_female,
-    # 'tank_id' : tank_id,
-    # 'treatment' : treatment,
+    'tank_id' : tank_id,
     'pairwise_distance_males' : pairwise_distance(male_locations),
     'pairwise_distance_females' : pairwise_distance(model_female_locations),
     'pairewise_distance_juvs' : pairwise_distance(focal_female_locations),
-    'total_fish' : total_fish
+    'total_fish' : total_fish,
+    'time_of_clip' : time_in_video,
+    'date' : date
     }
     
     # figure out how to name the resulting file
-    name = os.path.basename(video_name).split('.')[0] + '.json'
+    name = video.split('.')[0] + '.json'
     i = 1
-    while os.path.isfile(name):
-        name = name.split('.')[0] + '_' + str(i) + '.json'
+    while os.path.isfile(data_dir + '/' + name):
+        name = video.split('.')[0] + '_' + str(i) + '.json'
         i += 1
     
-    # save the data file
+    # save the data file in the data directory, first making sure it exists
+    data_dir = check_if_data_dir_exists(path)
+    print data_dir + '/' + name
     try:
-        with open(name, 'w') as f:
+        with open(data_dir + '/' + name, 'w') as f:
             json.dump(data, f)
+        
+        # then move the file to the 'already_watched' directory
+        save_to = check_if_already_watched_exists(path)
+        print save_to
+        
+        os.rename(video_name, os.path.join(save_to, video))
         tkMessageBox.showinfo("oh yeahhh","\n\nall done. wahoo!\nthe data has been saved at {}".format(name))
     except:
         print "oh no! problem writing the data file. See Luke."
         tkMessageBox.showinfo("oh no!","oh no! problem writing the data file. See Luke.")
     
     
-    print "\n\nall done. wahoo!\nthe data has been saved at {}".format(name)
+    print "\n\nall done. wahoo!\nthe data has been saved at {}".format(data_dir + '/' + name)
 
     cv2.destroyAllWindows()
