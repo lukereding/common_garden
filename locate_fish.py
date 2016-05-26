@@ -393,7 +393,7 @@ if __name__ == "__main__":
         print save_to
         
         os.rename(video_name, os.path.join(save_to, video))
-        tkMessageBox.showinfo("oh yeahhh","\n\nall done. wahoo!\nthe data has been saved at {}".format(name))
+        tkMessageBox.showinfo("oh yeahhh","\n\nall done. wahoo!\nthe data has been saved at {}".format(data_dir + '/' + name))
     except:
         print "oh no! problem writing the data file. See Luke."
         tkMessageBox.showinfo("oh no!","oh no! problem writing the data file. See Luke.")
