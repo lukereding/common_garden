@@ -376,13 +376,13 @@ if __name__ == "__main__":
     
     # figure out how to name the resulting file
     name = video.split('.')[0] + '.json'
+    data_dir = check_if_data_dir_exists(path)
     i = 1
     while os.path.isfile(data_dir + '/' + name):
         name = video.split('.')[0] + '_' + str(i) + '.json'
         i += 1
     
     # save the data file in the data directory, first making sure it exists
-    data_dir = check_if_data_dir_exists(path)
     print data_dir + '/' + name
     try:
         with open(data_dir + '/' + name, 'w') as f:
