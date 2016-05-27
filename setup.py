@@ -1,4 +1,18 @@
-from distutils.core import setup
-import py2exe
+from cx_Freeze import setup, Executable
 
-setup(console=['locate_fish.py'])
+# Dependencies are automatically detected, but it might need
+# fine tuning.
+buildOptions = dict(packages = [], excludes = [])
+
+import sys
+base = 'Win32GUI' if sys.platform=='win32' else None
+
+executables = [
+    Executable('common_garden.py', base=base)
+]
+
+setup(name='common_garden',
+      version = '0.0.1',
+      description = 'for analyzing common garden tank videos',
+      options = dict(build_exe = buildOptions),
+      executables = executables)
