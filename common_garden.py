@@ -294,7 +294,7 @@ def check_if_already_watched_exists(p):
     return os.path.join(p,'already_watched')
 
 def double_list(l):
-    print [(x**2, y**2) for (x,y) in l]
+    return [(x*2, y*2) for (x,y) in l]
 
 def get_screen_dim(r):
     screen_width = r.winfo_screenwidth()
