@@ -265,6 +265,8 @@ def show_video(name, size):
             except:
                 cap = cv2.VideoCapture(name)
                 ret, frame = cap.read()
+                if size == "small":
+                    frame = cv2.resize(frame, (0,0), fx=0.5, fy=0.5)
                 cv2.imshow(name,frame)
             if cv2.waitKey(20) & 0xFF == 27:
                 break
