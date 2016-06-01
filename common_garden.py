@@ -208,7 +208,7 @@ def get_male_locations():
     while True:
         cv2.imshow('locate_males',frame_copy)
         if cv2.waitKey(20) & 0xFF == 27:
-            cv2.destroyAllWindows; cv2.waitKey(1)
+            cv2.destroyAllWindows()
             break
 
     print "male locations: {}".format(male_locations)
@@ -223,7 +223,7 @@ def get_model_female_locations():
     while True:
         cv2.imshow('locate_females',frame_copy)
         if cv2.waitKey(20) & 0xFF == 27:
-            cv2.destroyAllWindows; cv2.waitKey(1)
+            cv2.destroyAllWindows()
             break
 
     print "model female locations: {}".format(model_female_locations)
@@ -238,7 +238,7 @@ def get_focal_female_locations():
     while True:
         cv2.imshow('locate_focal_females',frame_copy)
         if cv2.waitKey(20) & 0xFF == 27:
-            cv2.destroyAllWindows
+            cv2.destroyAllWindows()
             break
 
     print "focal female locations: {}".format(focal_female_locations)
@@ -315,10 +315,10 @@ if __name__ == "__main__":
     # close the windows`
     cv2.destroyAllWindows(); cv2.waitKey(1)
 
-    root = Tk()
-    my_gui = get_behaviors(root)
-    root.mainloop()
-    root.destroy()
+    root2 = Tk()
+    my_gui = get_behaviors(root2)
+    root2.mainloop()
+    root2.destroy()
     
     # get number of each type of fish
     number_focal = len(focal_female_locations)
