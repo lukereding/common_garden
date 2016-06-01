@@ -256,9 +256,9 @@ def show_video(name, size):
     else:
         while(True):
             # Capture frame-by-frame
+            ret, frame = cap.read()
             if size == "small":
                 frame = cv2.resize(frame, (0,0), fx=0.5, fy=0.5)
-            ret, frame = cap.read()
             cv2.putText(frame,'press the escape key when done',(20,20), cv2.FONT_HERSHEY_SIMPLEX, 1,(130,130,130),2)
             try:
                 cv2.imshow(name,frame)
