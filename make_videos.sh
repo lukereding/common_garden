@@ -7,6 +7,10 @@ fi
 
 command -v ffmpeg >/dev/null 2>&1 || { echo >&2 "ffmpeg is not installed. install with brew install ffmpeg"; exit 1; }
 
+### TODo
+
+# use -newer to and write a log file to only create new videos, i.e., each time the script runs, update a logfile, only make videos for files newer than the logfile
+
 # make all the videos from 1 min
 find $1 -type f -maxdepth 1 -name "*.mp4" -exec bash chop_videos.sh {} 1 \; 
 
