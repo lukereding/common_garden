@@ -157,9 +157,9 @@ def get_first_frame(filename, size):
         while i < 10:
             ret, frame = cap.read()
             i += 1
+        ret, frame = cap.read()
         if size == "small":
             frame = cv2.resize(frame, (0,0), fx=0.5, fy=0.5)
-        ret, frame = cap.read()
         print "dimensions of video: {}".format(frame.shape)
     except:
         sys.exit("problem reading the video file")
@@ -255,12 +255,13 @@ def show_video(name, size):
       print "Error when reading video"
     else:
         while(True):
-            # Capture frame-by-frame
-            ret, frame = cap.read()
-            if size == "small":
-                frame = cv2.resize(frame, (0,0), fx=0.5, fy=0.5)
-            cv2.putText(frame,'press the escape key when done',(20,20), cv2.FONT_HERSHEY_SIMPLEX, 1,(130,130,130),2)
             try:
+                # Capture frame-by-frame
+                ret, frame = cap.read()
+                if size == "small":
+                    frame = cv2.resize(frame, (0,0), fx=0.5, fy=0.5)
+                cv2.putText(frame,'press the escape key when done',(20,20), cv2.FONT_HERSHEY_SIMPLEX, 1,(130,130,130),2)
+                
                 cv2.imshow(name,frame)
             except:
                 cap = cv2.VideoCapture(name)
