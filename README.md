@@ -15,8 +15,12 @@ Executable file for MAC OSX. If you have a mac, downloading this file and double
 
 Note that this executable was made with [pyinstaller](https://github.com/pyinstaller/pyinstaller) and that I have had no luck with similar programs that promise to do similar things (py2exe, py2app, nuitka, etc.). The `.exe` file was created with `pyinstaller common_garden.py --onefile --windowed`.
 
+Run by double-clicking on the icon.
+
 #### `make_videos.sh`
 Used to create 3 10-second videos from the 15 minute videos. Looks like large video files (e.g. ~15 min videos taken from an amazon fire) and extracts 5-sec videos at 1:00, 6:00, and 11:00.
 
+Run like `bash make_videos.sh /path/to/videos`
+
 #### `chop_videos.sh`
-Workhorse script of `make_videos.sh`.
+Workhorse script of `make_videos.sh`. Not used directly. Overwrites video files if necessary. 
