@@ -7,7 +7,7 @@ if [ "$#" -ne 2 ]; then
 fi
 
 # check file name
-if [ ! -f $1 ]; then
+if [ ! -f "$1" ]; then
   echo "file not found. exiting."
   exit 1
 fi
@@ -20,16 +20,20 @@ if [ "$2" != "1" ] && [ "$2" != "6" ] && [ "$2" != "11" ]; then
 fi
 
 # get basename of file
-BASE=`basename $1`
+BASE=`basename "$1"`
 FILE=${BASE%.*}
 DIR=$(dirname "${1}")
 
+echo $BASE
+echo $FILE
+echo $DIR
+
 if [ "$2" -eq "1" ]; then
-    ffmpeg -ss 00:01:00 -i $1 -t 00:00:10 -vcodec copy -async 1 -y "$DIR"/"short_videos/""$FILE"_1min.mp4
+    ffmpeg -ss 00:01:00 -i "$1" -t 00:00:10 -vcodec copy -async 1 "$DIR"/"short_videos/""$FILE"_1min.mp4
 elif [ "$2" -eq "6" ]; then
-    ffmpeg -ss 00:06:00 -i $1 -t 00:00:10 -vcodec copy -async 1 -y "$DIR"/"short_videos/""$FILE"_6min.mp4
+    ffmpeg -ss 00:06:00 -i "$1" -t 00:00:10 -vcodec copy -async 1 "$DIR"/"short_videos/""$FILE"_6min.mp4
 else
-    ffmpeg -ss 00:11:00 -i $1 -t 00:00:10 -vcodec copy -y "$DIR"/"short_videos/""$FILE"_11min.mp4
+    ffmpeg -ss 00:11:00 -i "$1" -t 00:00:10 -vcodec copy "$DIR"/"short_videos/""$FILE"_11min.mp4
 fi
 
 if ! [ $? -eq 0 ]; then

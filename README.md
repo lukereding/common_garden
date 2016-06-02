@@ -26,7 +26,7 @@ Used to record (1) positions of different types of fish in the tank and (2) beha
 Run like `python common_garden.py`
 
 ### `make_videos.sh`
-Used to create 3 10-second videos from the 15 minute videos. Looks like large video files (e.g. ~15 min videos taken from an amazon fire) and extracts 5-sec videos at 1:00, 6:00, and 11:00.
+Used to create 3 10-second videos from the 15 minute videos. Looks like large video files (e.g. ~15 min videos taken from an amazon fire) and extracts 5-sec videos at 1:00, 6:00, and 11:00. It assumes that all your videos are in a single folder with no sub-folders or directories. Spaces in pathnames are allowed.
 
 Run like `bash make_videos.sh /path/to/videos`
 
