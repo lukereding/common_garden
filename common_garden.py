@@ -4,6 +4,7 @@ import sys
 from math import sqrt
 import json
 import os.path
+import os
 from Tkinter import *
 from tkFileDialog import askopenfilename
 import tkMessageBox
@@ -127,7 +128,8 @@ class get_behaviors:
         small_court = self.E10.get()
         large_vs_female = self.E12.get()
 
-
+def get_creation_time(path):
+    return os.stat(path).st_birthtime
 
 # get the distance between the last element of the list and everything before it; repeat until the list is empty
 def pairwise_distance(locations):
@@ -361,22 +363,21 @@ if __name__ == "__main__":
     path, video = os.path.split(video_name)
 
     # make sure it comforms to our naming convention:
-    if len(video.split("_")) == 7:
+    if len(video.split("_")) == 5:
         # get date
-        date = video.split('_')[2:5]
+        date = video.split('_')[0:3]
         date = '-'.join(date)
 
         # get tank id
-        tank_id = video.split('_')[-2].upper()
+        tank_id = video.split('_')[-2]
 
         # get when in the video
         time_in_video = video.split('_')[-1].split('.')[0]
 
     # otherwise, call assign None
     else:
-        date = tank_id = time_in_video = None
-        ## get date from file!!
-        #############
+        tank_id = time_in_video = None
+        date = get_creation_time(video_name)
 
     # get the data all together in a dictionary
     data = {
