@@ -12,7 +12,7 @@ This repository will contain all code associated with analyzing videos taken fro
 
 It looks something like this:
 
-![gif example](./example_of_useage.gif)
+![gif example](https://github.com/lukereding/common_garden/raw/master/example_of_usage.gif)
 
 
 ## contents:
