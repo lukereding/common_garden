@@ -25,11 +25,11 @@ FILE=${BASE%.*}
 DIR=$(dirname "${1}")
 
 if [ "$2" -eq "1" ]; then
-    ffmpeg -ss 00:01:00 -i $1 -t 00:00:10 -vcodec copy -async 1 -y "$DIR"/"$FILE"_1min.mp4
+    ffmpeg -ss 00:01:00 -i $1 -t 00:00:10 -vcodec copy -async 1 -y "$DIR"/"short_videos/""$FILE"_1min.mp4
 elif [ "$2" -eq "6" ]; then
-    ffmpeg -ss 00:06:00 -i $1 -t 00:00:10 -vcodec copy -async 1 -y "$DIR"/"$FILE"_6min.mp4
+    ffmpeg -ss 00:06:00 -i $1 -t 00:00:10 -vcodec copy -async 1 -y "$DIR"/"short_videos/""$FILE"_6min.mp4
 else
-    ffmpeg -ss 00:11:00 -i $1 -t 00:00:10 -vcodec copy -y "$DIR"/"$FILE"_11min.mp4
+    ffmpeg -ss 00:11:00 -i $1 -t 00:00:10 -vcodec copy -y "$DIR"/"short_videos/""$FILE"_11min.mp4
 fi
 
 if ! [ $? -eq 0 ]; then
