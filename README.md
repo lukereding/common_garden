@@ -3,12 +3,17 @@
 This repository will contain all code associated with analyzing videos taken from common garden tanks.
 
 ## to use the program:
-- Are you using a Mac? 
+- Are you using a Mac?
    - If so, great, otherwise you can directly run the `common_garden.py` script after installing a ton of dependencies.
 - Download this repository by clicking the Download button above. Choose zip.
 - Un-zip the repository.
 - Connect the hard drive containing the videos to the computer.
 - In the Finder, find the folder you creating by un-ziping the directory. Double click on `common_garden`. Follow the instructions.
+
+It looks something like this:
+
+![gif example](./example_of_useage.gif)
+
 
 ## contents:
 
@@ -31,4 +36,4 @@ Used to create 3 10-second videos from the 15 minute videos. Looks like large vi
 Run like `bash make_videos.sh /path/to/videos`
 
 ### `chop_videos.sh`
-Workhorse script of `make_videos.sh`. Not used directly. Overwrites video files if necessary. 
+Workhorse script of `make_videos.sh`. Not used directly. Overwrites video files if necessary.
