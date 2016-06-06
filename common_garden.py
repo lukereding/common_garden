@@ -17,8 +17,7 @@ useage: python locate_fish.py video.mp4
 
 
 ### TO DO:
-##### add box select the path to the video
-##### py2exe && py2app
+##### allow user to select frame
 
 '''
 
@@ -152,7 +151,7 @@ def distance(x,y):
     return d
 
 
-def get_first_frame(filename, size):
+def get_first_frame(filename):
     cap = cv2.VideoCapture(filename)
     try:
         i = 0
@@ -160,8 +159,6 @@ def get_first_frame(filename, size):
             ret, frame = cap.read()
             i += 1
         ret, frame = cap.read()
-        if size == "small":
-            frame = cv2.resize(frame, (0,0), fx=0.5, fy=0.5)
         print "dimensions of video: {}".format(frame.shape)
     except:
         sys.exit("problem reading the video file")
@@ -251,7 +248,7 @@ def get_focal_female_locations():
 
     print "focal female locations: {}".format(focal_female_locations)
 
-def show_video(name, size):
+def show_video(name):
     cap = cv2.VideoCapture(name)
     if not cap.isOpened():
       print "Error when reading video"
@@ -260,16 +257,12 @@ def show_video(name, size):
             try:
                 # Capture frame-by-frame
                 ret, frame = cap.read()
-                if size == "small":
-                    frame = cv2.resize(frame, (0,0), fx=0.5, fy=0.5)
                 cv2.putText(frame,'press the escape key when done',(20,20), cv2.FONT_HERSHEY_SIMPLEX, 1,(130,130,130),2)
 
                 cv2.imshow(name,frame)
             except:
                 cap = cv2.VideoCapture(name)
                 ret, frame = cap.read()
-                if size == "small":
-                    frame = cv2.resize(frame, (0,0), fx=0.5, fy=0.5)
                 cv2.imshow(name,frame)
             if cv2.waitKey(20) & 0xFF == 27:
                 break
@@ -298,6 +291,7 @@ def check_if_already_watched_exists(p):
 def double_list(l):
     return [(x*2, y*2) for (x,y) in l]
 
+# no longer used
 def get_screen_dim(r):
     screen_width = r.winfo_screenwidth()
     screen_height = r.winfo_screenheight()
@@ -312,17 +306,16 @@ if __name__ == "__main__":
     # read om the videoname
     root = Tk()
     # get screen dimensions
-    width, height, size = get_screen_dim(root)
     my_gui = get_video(root)
     root.mainloop()
     root.destroy()
     print "video_name: {}".format(video_name)
 
     # show the video, on repeat if needed
-    show_video(video_name, size)
+    show_video(video_name)
 
     # get first frame
-    frame = get_first_frame(video_name, size)
+    frame = get_first_frame(video_name)
     frame_copy = frame
 
     # get the male locations
@@ -352,12 +345,6 @@ if __name__ == "__main__":
     number_male = len(male_locations)
     number_model_female = len(model_female_locations)
     total_fish = number_focal + number_male + number_model_female
-
-    # if veiwing on a small screen, double the values of the points to keep things consistent
-    if size == "small":
-        focal_female_locations = double_list(focal_female_locations)
-        male_locations = double_list(male_locations)
-        model_female_locations = double_list(model_female_locations)
 
     # the videos are named like 'week_of_04_03_2016_SS1_00:01'. let's extract the date and tank id from that
     path, video = os.path.split(video_name)
@@ -406,7 +393,6 @@ if __name__ == "__main__":
     'total_fish' : total_fish,
     'time_of_clip' : time_in_video,
     'date' : date,
-    'size_of_screen': size,
     'info': 'distances were multiplied by two if the user was on a small screen'
     }
 
