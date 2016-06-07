@@ -25,7 +25,7 @@ The program moves the video you just watched to a new folder called `already wat
 
 Executable file for MAC OSX. If you have a mac, downloading this file and double-clicking it should do the trick.
 
-Note that this executable was made with [pyinstaller](https://github.com/pyinstaller/pyinstaller) and that I have had no luck with similar programs that promise to do similar things (py2exe, py2app, nuitka, etc.). This file was created with `pyinstaller common_garden.py --onefile --windowed`.
+Note that this executable was made with [pyinstaller](https://github.com/pyinstaller/pyinstaller) and that I have had no luck with similar programs that promise to do similar things (py2exe, py2app, nuitka, etc.). This file was created with `pyinstaller common_garden.py --onefile --windowed`. Note that this creates an `.app` that is exaclty what you want, only it fails on several Macs I've tested it on. On the mac mini, I've created an app in Automator that simply calls this unix executable file. The advantage is that I can then drag this 'app' to the dock where it's visible and easy to find.
 
 Run by double-clicking on the icon.
 
