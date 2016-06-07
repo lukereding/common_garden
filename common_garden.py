@@ -11,13 +11,9 @@ import tkMessageBox
 
 '''
 
-script for analyzing behaviors in common garden videos
+script for analyzing behaviors in common garden videos. all GUI.
 
-useage: python locate_fish.py video.mp4
-
-
-### TO DO:
-##### allow user to select frame
+useage: python locate_fish.py
 
 '''
 
@@ -112,7 +108,8 @@ class get_behaviors:
 
         self.quit_button = Button(master, text="Close", command=master.quit)
         self.quit_button.pack()
-
+    
+    # save variables when the submit button is pressed
     def on_button(self):
         global large_vs_large, large_vs_small, small_vs_female, int_vs_female, int_vs_int, female_vs_female, female_vs_male, large_court, int_court, small_court, large_vs_female
         large_vs_large = self.E1.get()
@@ -127,6 +124,33 @@ class get_behaviors:
         small_court = self.E10.get()
         large_vs_female = self.E12.get()
 
+# to get frame to use for identifying the fish from the user; return the number of the frame to use
+def get_frame(name):
+    cap = cv2.VideoCapture(name)
+    ret, img = cap.read()
+    frame_number = 1
+    while(1):
+        # put instructions on the frame
+        cv2.putText(img,'select a frame where you can see the max. number of fish',(10,100), cv2.FONT_HERSHEY_SIMPLEX, 1,(180,180,180),1)
+        cv2.putText(img,'press the forward and backwards keys to navigate',(10,200), cv2.FONT_HERSHEY_SIMPLEX, 1,(180,180,180),1)
+        cv2.putText(img,'press Escape when you find a suitable frame',(10,300), cv2.FONT_HERSHEY_SIMPLEX, 1,(180,180,180),1)
+        cv2.imshow('select a frame where you can see the max. number of fish',img)
+        k = cv2.waitKey(33)
+        if k == 63235: # right arrow
+            frame_number += 1
+            ret = cap.set(1,frame_number)
+            ret, img = cap.read()
+        elif k == 63234: # left arrow
+            frame_number -= 1
+            ret = cap.set(1,frame_number)
+            ret, img = cap.read()
+        elif k == 27: # escape
+            break
+    cv2.destroyAllWindows; cv2.waitKey(1)
+    cap.release()
+    return frame_number
+
+# the creation time of a file
 def get_creation_time(path):
     return os.stat(path).st_birthtime
 
@@ -146,26 +170,24 @@ def pairwise_distance(locations):
         return reduce(lambda x, y: x + y, distances) / len(distances)
 
 
+# function to find distance in two dimensions
 def distance(x,y):
     d = sqrt((y[0] - x[0])**2 + (y[1] - x[1])**2)
     return d
 
-
-def get_first_frame(filename):
+# get the nth frame from a video for the user to locate the fish
+def get_correct_frame(filename, number):
     cap = cv2.VideoCapture(filename)
     try:
-        i = 0
-        while i < 10:
-            ret, frame = cap.read()
-            i += 1
+        cap.set(1, number)
         ret, frame = cap.read()
-        print "dimensions of video: {}".format(frame.shape)
     except:
         sys.exit("problem reading the video file")
 
     cap.release()
     return frame
 
+# get locations of males in tank
 def get_male_locations(frame):
 
     # print instructions on the frame
@@ -248,6 +270,7 @@ def get_focal_female_locations():
 
     print "focal female locations: {}".format(focal_female_locations)
 
+# loop dat video
 def show_video(name):
     cap = cv2.VideoCapture(name)
     if not cap.isOpened():
@@ -258,7 +281,6 @@ def show_video(name):
                 # Capture frame-by-frame
                 ret, frame = cap.read()
                 cv2.putText(frame,'press the escape key when done',(20,20), cv2.FONT_HERSHEY_SIMPLEX, 1,(130,130,130),2)
-
                 cv2.imshow(name,frame)
             except:
                 cap = cv2.VideoCapture(name)
@@ -271,6 +293,7 @@ def show_video(name):
     cap.release()
     cv2.destroyAllWindows()
 
+# not used
 def get_info(text):
     print text,
     var = raw_input()
@@ -278,20 +301,23 @@ def get_info(text):
         var = raw_input('please only input a digit: ')
     return var
 
+# check if a data directory exists; if  not, create it
 def check_if_data_dir_exists(p):
     if not os.path.exists(os.path.join(p,'data')):
         os.makedirs(os.path.join(p,'data'))
     return os.path.join(p,'data')
 
+# check if already watched dir exists; if not, create it
 def check_if_already_watched_exists(p):
     if not os.path.exists(os.path.join(p,'already_watched')):
         os.makedirs(os.path.join(p,'already_watched'))
     return os.path.join(p,'already_watched')
 
+# not used anymore
 def double_list(l):
     return [(x*2, y*2) for (x,y) in l]
 
-# no longer used
+# no longer used; get screen dimensions, return 'small' is smaller than HD
 def get_screen_dim(r):
     screen_width = r.winfo_screenwidth()
     screen_height = r.winfo_screenheight()
@@ -300,6 +326,13 @@ def get_screen_dim(r):
     else:
         size = "fine"
     return screen_width, screen_height, size
+
+
+
+#############################
+## end function declarations ##
+#################################
+
 
 if __name__ == "__main__":
 
@@ -313,9 +346,12 @@ if __name__ == "__main__":
 
     # show the video, on repeat if needed
     show_video(video_name)
-
+    
+    # get frame number to use from the video from the user
+    frame_number = get_frame(video_name)
+    
     # get first frame
-    frame = get_first_frame(video_name)
+    frame = get_correct_frame(video_name, frame_number)
     frame_copy = frame
 
     # get the male locations
