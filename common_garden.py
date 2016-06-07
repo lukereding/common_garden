@@ -129,23 +129,30 @@ def get_frame(name):
     cap = cv2.VideoCapture(name)
     ret, img = cap.read()
     frame_number = 1
+    total_frames = cap.get(7)
     while(1):
         # put instructions on the frame
         cv2.putText(img,'select a frame where you can see the max. number of fish',(10,100), cv2.FONT_HERSHEY_SIMPLEX, 1,(180,180,180),1)
         cv2.putText(img,'press the forward and backwards keys to navigate',(10,200), cv2.FONT_HERSHEY_SIMPLEX, 1,(180,180,180),1)
         cv2.putText(img,'press Escape when you find a suitable frame',(10,300), cv2.FONT_HERSHEY_SIMPLEX, 1,(180,180,180),1)
+        # show the frame
         cv2.imshow('select a frame where you can see the max. number of fish',img)
         k = cv2.waitKey(33)
-        if k == 63235: # right arrow
-            frame_number += 1
+        if k == 63235 and (total_frames - frame_number) > 10: # right arrow
+            frame_number += 10 # skip 10 frames at a time, otherwise too tedious
             ret = cap.set(1,frame_number)
             ret, img = cap.read()
-        elif k == 63234: # left arrow
-            frame_number -= 1
+        elif k == 63234 and (total_frames - frame_number) > 10: # left arrow
+            frame_number -= 10
             ret = cap.set(1,frame_number)
             ret, img = cap.read()
         elif k == 27: # escape
             break
+        # if the user gets to the end of the video, reset the video
+        elif (total_frames - frame_number) < 10:
+            cap.set(1,1)
+            ret, img = cap.read()
+            frame_number = 1
     cv2.destroyAllWindows; cv2.waitKey(1)
     cap.release()
     return frame_number
