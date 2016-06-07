@@ -3,13 +3,14 @@
 This repository contains code and executable files to run a program to analyze videos taken for the common garden experiment.
 
 ## using the program
+- on the mac mini in the lab, simply click on the common garden icon in the dock.
 - (Note that these steps only work if you are using a Mac. A Windows machine could run the program directly like `python common_garden.py` after downloading all necessary dependencies.)
 - Download this repository by clicking the Download button above. Choose zip.
 - Un-zip the repository.
 - Connect the hard drive containing the videos to the computer.
 - In the Finder, find the folder you creating by un-ziping the directory. Double click on `common_garden`. Follow the instructions.
 
-When the program is started, it prompts you to select the video you'd like to analyze. This is any video in the `small_videos` directory of Mary's external hard drive. The program then shows the 10 second video on repeat indefinately. Record all relevant behaviors and take note of the locations of all fish. Hit Escape to stop the video. The program them prompts you to click on the locations of the males, model females, and juvenile fish. Hit Escape after each. The program then opens a dialogue box where you can enter the number of behaviors. Click Submit to submit your answers, and Close to end the trial. If everything works, a box will pop up telling you everything saved.
+When the program is started, it prompts you to select the video you'd like to analyze. This is any video in the `small_videos` directory of Mary's external hard drive. The program then shows the 10 second video on repeat indefinately. Record all relevant behaviors and take note of the locations of all fish. Hit Escape to stop the video. The first frame of the video then appears; use the left and right cursors to go forward or backwards through the video to find a frame where you can see most of the fish. Hit Escape once you find this frame. The program them prompts you to click on the locations of the males, model females, and juvenile fish. Hit Escape after each. The program then opens a dialogue box where you can enter the number of behaviors. Click Submit to submit your answers, and Close to end the trial. If everything works, a box will pop up telling you everything saved.
 
 The program moves the video you just watched to a new folder called `already watched` and the resulting JSON data file to a new `data` folder.
 
