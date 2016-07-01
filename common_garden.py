@@ -102,16 +102,25 @@ class get_behaviors:
         self.label10.pack()
         self.E10.pack()
 
+        self.label13 = Label( master, text="number of times a males chased a juvenile:")
+        self.E13 = Entry(master, bd =5)
+        self.label13.pack()
+        self.E13.pack()
+
+        self.label11 = Label( master, text="comments:")
+        self.E11 = Entry(master, bd =5)
+        self.label11.pack()
+        self.E11.pack()
 
         self.save_button = Button(master, text="Submit responses", command=self.on_button)
         self.save_button.pack()
 
         self.quit_button = Button(master, text="Close", command=master.quit)
         self.quit_button.pack()
-    
+
     # save variables when the submit button is pressed
     def on_button(self):
-        global large_vs_large, large_vs_small, small_vs_female, int_vs_female, int_vs_int, female_vs_female, female_vs_male, large_court, int_court, small_court, large_vs_female
+        global large_vs_large, large_vs_small, small_vs_female, int_vs_female, int_vs_int, female_vs_female, female_vs_male, large_court, int_court, small_court, large_vs_female, male_chased_juvenile, comments
         large_vs_large = self.E1.get()
         large_vs_small = self.E2.get()
         small_vs_female = self.E4.get()
@@ -123,18 +132,22 @@ class get_behaviors:
         int_court = self.E9.get()
         small_court = self.E10.get()
         large_vs_female = self.E12.get()
+        male_chased_juvenile = self.E13.get()
+        comments = self.E11.get()
 
 # to get frame to use for identifying the fish from the user; return the number of the frame to use
 def get_frame(name):
     cap = cv2.VideoCapture(name)
     ret, img = cap.read()
+    if ret is False:
+        sys.exit("couldn't read the video file.")
     frame_number = 1
     total_frames = cap.get(7)
     while(1):
         # put instructions on the frame
-        cv2.putText(img,'select a frame where you can see the max. number of fish',(10,100), cv2.FONT_HERSHEY_SIMPLEX, 1,(180,180,180),1)
-        cv2.putText(img,'press the forward and backwards keys to navigate',(10,200), cv2.FONT_HERSHEY_SIMPLEX, 1,(180,180,180),1)
-        cv2.putText(img,'press Escape when you find a suitable frame',(10,300), cv2.FONT_HERSHEY_SIMPLEX, 1,(180,180,180),1)
+        cv2.putText(img,'select a frame where you can see the max. number of fish',(10,100), cv2.FONT_HERSHEY_SIMPLEX, 1,(0,0,0),2)
+        cv2.putText(img,'press the forward and backwards keys to navigate',(10,200), cv2.FONT_HERSHEY_SIMPLEX, 1,(0,0,0),2)
+        cv2.putText(img,'press Escape when you find a suitable frame',(10,300), cv2.FONT_HERSHEY_SIMPLEX, 1,(0,0,0),2)
         # show the frame
         cv2.imshow('select a frame where you can see the max. number of fish',img)
         k = cv2.waitKey(33)
@@ -157,12 +170,15 @@ def get_frame(name):
     cap.release()
     return frame_number
 
-# the creation time of a file
 def get_creation_time(path):
+    """Get the creation time of a file."""
     return os.stat(path).st_birthtime
 
-# get the distance between the last element of the list and everything before it; repeat until the list is empty
+def tuple_to_list(x):
+    return [list(a) for a in x]
+
 def pairwise_distance(locations):
+    """Get the distance between the last element of the list and everything before it; repeat until the list is empty."""
     loc = locations
     # returns None if there's only one location.
     if len(loc) == 1:
@@ -174,16 +190,16 @@ def pairwise_distance(locations):
             # probably a better way to do this that doesn't require nesting a list
             distances.append([distance(last_location, i) for i in loc])
         distances = sum(distances, [])
-        return reduce(lambda x, y: x + y, distances) / len(distances)
+        return round(reduce(lambda x, y: x + y, distances) / len(distances) , 2)
 
 
-# function to find distance in two dimensions
 def distance(x,y):
+    """Find distance in two dimensions."""
     d = sqrt((y[0] - x[0])**2 + (y[1] - x[1])**2)
     return d
 
-# get the nth frame from a video for the user to locate the fish
 def get_correct_frame(filename, number):
+    """Get the nth frame from a video for the user to locate the fish."""
     cap = cv2.VideoCapture(filename)
     try:
         cap.set(1, number)
@@ -194,9 +210,8 @@ def get_correct_frame(filename, number):
     cap.release()
     return frame
 
-# get locations of males in tank
 def get_male_locations(frame):
-
+    """Get locations of males in tank."""
     # print instructions on the frame
     cv2.putText(frame,'select all the males',(10,100), cv2.FONT_HERSHEY_SIMPLEX, 3,(255,255,255),2)
 
@@ -214,11 +229,11 @@ def get_male_locations(frame):
             break
 
 # mouse callback function
-def draw_circles_males(event,x,y,flags,param):
+def draw_circles_large_males(event,x,y,flags,param):
     if event == cv2.EVENT_LBUTTONDOWN:
         cv2.circle(frame_copy,(x,y),8,(110, 85, 31),-1)
         print x,y
-        male_locations.append((x,y))
+        large_male_locations.append((x,y))
 
 def draw_circles_model_females(event,x,y,flags,param):
     if event == cv2.EVENT_LBUTTONDOWN:
@@ -232,20 +247,41 @@ def draw_circles_focal_females(event,x,y,flags,param):
         print "x : {}\ny: {}\n".format(x,y)
         focal_female_locations.append((x,y))
 
-def get_male_locations():
-    cv2.putText(frame_copy,'select all the males',(10,100), cv2.FONT_HERSHEY_SIMPLEX, 1,(110, 85, 31),2)
-    cv2.putText(frame_copy,'press escape when done',(400,100), cv2.FONT_HERSHEY_SIMPLEX, 1,(110, 85, 31),2)
-    cv2.namedWindow('locate_males')
-    cv2.setMouseCallback('locate_males', draw_circles_males)
+def draw_circles_small_males(event,x,y,flags,param):
+    if event == cv2.EVENT_LBUTTONDOWN:
+        cv2.circle(frame_copy,(x,y),8,(200, 200, 200),-1)
+        print x,y
+        small_male_locations.append((x,y))
+
+def get_large_male_locations():
+    cv2.putText(frame_copy,'select all large (or intermediate) males',(10,100), cv2.FONT_HERSHEY_SIMPLEX, 1,(0, 0, 0),2)
+    cv2.putText(frame_copy,'press escape when done',(700,100), cv2.FONT_HERSHEY_SIMPLEX, 1,(0, 0, 0),2)
+    cv2.namedWindow('locate_large_males')
+    cv2.setMouseCallback('locate_large_males', draw_circles_large_males)
 
     # show the frame
     while True:
-        cv2.imshow('locate_males',frame_copy)
+        cv2.imshow('locate_large_males',frame_copy)
         if cv2.waitKey(20) & 0xFF == 27:
             cv2.destroyAllWindows()
             break
 
-    print "male locations: {}".format(male_locations)
+    print "large male locations: {}".format(large_male_locations)
+
+def get_small_male_locations():
+    cv2.putText(frame_copy,'select all the small males',(10,150), cv2.FONT_HERSHEY_SIMPLEX, 1,(200, 200, 200),2)
+    cv2.namedWindow('locate_small_males')
+    cv2.setMouseCallback('locate_small_males', draw_circles_small_males)
+
+    # show the frame
+    while True:
+        cv2.imshow('locate_small_males',frame_copy)
+        if cv2.waitKey(20) & 0xFF == 27:
+            cv2.destroyAllWindows()
+            break
+
+    print "small_male locations: {}".format(small_male_locations)
+
 
 def get_model_female_locations():
     cv2.putText(frame_copy,'select all the model females',(10,200), cv2.FONT_HERSHEY_SIMPLEX, 1,(178,104,252),2)
@@ -263,7 +299,7 @@ def get_model_female_locations():
     print "model female locations: {}".format(model_female_locations)
 
 def get_focal_female_locations():
-    cv2.putText(frame_copy,'select all the focal juveniles',(10,300), cv2.FONT_HERSHEY_SIMPLEX, 1,(125,152,80),2)
+    cv2.putText(frame_copy,'select all the focal juveniles',(10,250), cv2.FONT_HERSHEY_SIMPLEX, 1,(125,152,80),2)
     # cv2.putText(frame_copy,'press escape when done',(400,300), cv2.FONT_HERSHEY_SIMPLEX, 1,(125,152,80),2)
     cv2.namedWindow('locate_focal_females')
     cv2.setMouseCallback('locate_focal_females', draw_circles_focal_females)
@@ -325,6 +361,7 @@ def double_list(l):
     return [(x*2, y*2) for (x,y) in l]
 
 # no longer used; get screen dimensions, return 'small' is smaller than HD
+# not used
 def get_screen_dim(r):
     screen_width = r.winfo_screenwidth()
     screen_height = r.winfo_screenheight()
@@ -353,17 +390,23 @@ if __name__ == "__main__":
 
     # show the video, on repeat if needed
     show_video(video_name)
-    
+
     # get frame number to use from the video from the user
     frame_number = get_frame(video_name)
-    
+
     # get first frame
     frame = get_correct_frame(video_name, frame_number)
     frame_copy = frame
 
-    # get the male locations
-    male_locations = []
-    get_male_locations()
+    # get the large male locations
+    frame_copy = frame
+    large_male_locations = []
+    get_large_male_locations()
+
+    # get the small male locations
+    frame_copy = frame
+    small_male_locations = []
+    get_small_male_locations()
 
     # get model female locations
     frame_copy = frame
@@ -385,9 +428,10 @@ if __name__ == "__main__":
 
     # get number of each type of fish
     number_focal = len(focal_female_locations)
-    number_male = len(male_locations)
+    number_large_male = len(large_male_locations)
+    number_small_male = len(small_male_locations)
     number_model_female = len(model_female_locations)
-    total_fish = number_focal + number_male + number_model_female
+    total_fish = number_focal + number_large_male + number_small_male + number_model_female
 
     # the videos are named like 'week_of_04_03_2016_SS1_00:01'. let's extract the date and tank id from that
     path, video = os.path.split(video_name)
@@ -408,13 +452,14 @@ if __name__ == "__main__":
     else:
         tank_id = time_in_video = None
         date = get_creation_time(video_name)
-
+    print "mode female locations: {}".format(model_female_locations)
     # get the data all together in a dictionary
     data = {
     'video_name' : video_name,
-    'focal_juvenile_locations' : focal_female_locations,
-    'male_locations' : male_locations,
-    'model_female_locations' : model_female_locations,
+    'focal_juvenile_locations' : tuple_to_list(focal_female_locations),
+    'large_male_locations' : tuple_to_list(large_male_locations),
+    'small_male_locations' : tuple_to_list(small_male_locations),
+    'model_female_locations' : tuple_to_list(model_female_locations),
     'large_vs_large' : large_vs_large,
     'large_vs_small' : large_vs_small,
     'int_vs_int' : int_vs_int,
@@ -427,16 +472,19 @@ if __name__ == "__main__":
     'intermediate_courting' : int_court,
     'small_courting' : small_court,
     'number_focal' : number_focal,
-    'number_male' : number_male,
+    'number_large_male' : number_large_male,
+    'number_small_male' : number_small_male,
     'number_model_female' : number_model_female,
+    'male_chased_juvenile' : male_chased_juvenile,
     'tank_id' : tank_id,
-    'pairwise_distance_males' : pairwise_distance(male_locations) if male_locations else None,
-    'pairwise_distance_females' : pairwise_distance(model_female_locations) if model_female_locations else None,
-    'pairewise_distance_juvs' : pairwise_distance(focal_female_locations) if focal_female_locations else None,
+    'pairwise_distance_large_males' : pairwise_distance(large_male_locations) if large_male_locations else "NA",
+    'pairwise_distance_small_males' : pairwise_distance(small_male_locations) if small_male_locations else "NA",
+    'pairwise_distance_females' : pairwise_distance(model_female_locations) if model_female_locations else "NA",
+    'pairewise_distance_juvs' : pairwise_distance(focal_female_locations) if focal_female_locations else "NA",
     'total_fish' : total_fish,
     'time_of_clip' : time_in_video,
     'date' : date,
-    'info': 'distances were multiplied by two if the user was on a small screen'
+    'comments' : comments
     }
 
     # figure out how to name the resulting file
