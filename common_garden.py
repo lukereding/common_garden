@@ -136,11 +136,14 @@ class get_behaviors:
         comments = self.E11.get()
 
 # to get frame to use for identifying the fish from the user; return the number of the frame to use
-def get_frame(name):
+def get_frame(name, rotate):
     cap = cv2.VideoCapture(name)
     ret, img = cap.read()
     if ret is False:
         sys.exit("couldn't read the video file.")
+    if rotate:
+        M = cv2.getRotationMatrix2D((960,540), 180, 1.0)
+        img = cv2.warpAffine(img, M, (1920, 1080))
     frame_number = 1
     total_frames = cap.get(7)
     while(1):
@@ -155,10 +158,14 @@ def get_frame(name):
             frame_number += 10 # skip 10 frames at a time, otherwise too tedious
             ret = cap.set(1,frame_number)
             ret, img = cap.read()
+            if rotate:
+                img = cv2.warpAffine(img, M, (1920, 1080))
         elif k == 63234 and (total_frames - frame_number) > 10: # left arrow
             frame_number -= 10
             ret = cap.set(1,frame_number)
             ret, img = cap.read()
+            if rotate:
+                img = cv2.warpAffine(img, M, (1920, 1080))
         elif k == 27: # escape
             break
         # if the user gets to the end of the video, reset the video
@@ -198,12 +205,15 @@ def distance(x,y):
     d = sqrt((y[0] - x[0])**2 + (y[1] - x[1])**2)
     return d
 
-def get_correct_frame(filename, number):
+def get_correct_frame(filename, number, rotate):
     """Get the nth frame from a video for the user to locate the fish."""
     cap = cv2.VideoCapture(filename)
+    M = cv2.getRotationMatrix2D((960,540), 180, 1.0)
     try:
         cap.set(1, number)
         ret, frame = cap.read()
+        if rotate:
+            frame = cv2.warpAffine(frame, M, (1920, 1080))
     except:
         sys.exit("problem reading the video file")
 
@@ -316,6 +326,8 @@ def get_focal_female_locations():
 # loop dat video
 def show_video(name):
     cap = cv2.VideoCapture(name)
+    rotate = False
+    M = cv2.getRotationMatrix2D((960,540), 180, 1.0)
     if not cap.isOpened():
       print "Error when reading video"
     else:
@@ -323,18 +335,24 @@ def show_video(name):
             try:
                 # Capture frame-by-frame
                 ret, frame = cap.read()
+                if rotate:
+                    frame = cv2.warpAffine(frame, M, (1920, 1080))
                 cv2.putText(frame,'press the escape key when done',(20,20), cv2.FONT_HERSHEY_SIMPLEX, 1,(130,130,130),2)
                 cv2.imshow(name,frame)
             except:
                 cap = cv2.VideoCapture(name)
                 ret, frame = cap.read()
                 cv2.imshow(name,frame)
-            if cv2.waitKey(20) & 0xFF == 27:
+            k = cv2.waitKey(20)
+            if k == 27:
                 break
+            elif k == 114:
+                rotate = False if rotate is True else True
 
     # When everything done, release the capture
     cap.release()
     cv2.destroyAllWindows()
+    return rotate
 
 # not used
 def get_info(text):
@@ -385,17 +403,18 @@ if __name__ == "__main__":
     # get screen dimensions
     my_gui = get_video(root)
     root.mainloop()
+    root.quit()
     root.destroy()
     print "video_name: {}".format(video_name)
 
     # show the video, on repeat if needed
-    show_video(video_name)
+    rotate = show_video(video_name)
 
     # get frame number to use from the video from the user
-    frame_number = get_frame(video_name)
+    frame_number = get_frame(video_name, rotate)
 
     # get first frame
-    frame = get_correct_frame(video_name, frame_number)
+    frame = get_correct_frame(video_name, frame_number, rotate)
     frame_copy = frame
 
     # get the large male locations
