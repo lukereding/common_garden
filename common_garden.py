@@ -112,6 +112,11 @@ class get_behaviors:
         self.label11.pack()
         self.E11.pack()
 
+        self.label15 = Label( master, text="your name:")
+        self.E15 = Entry(master, bd =5)
+        self.label15.pack()
+        self.E15.pack()
+
         self.save_button = Button(master, text="Submit responses", command=self.on_button)
         self.save_button.pack()
 
@@ -120,7 +125,7 @@ class get_behaviors:
 
     # save variables when the submit button is pressed
     def on_button(self):
-        global large_vs_large, large_vs_small, small_vs_female, int_vs_female, int_vs_int, female_vs_female, female_vs_male, large_court, int_court, small_court, large_vs_female, male_chased_juvenile, comments
+        global large_vs_large, large_vs_small, small_vs_female, int_vs_female, int_vs_int, female_vs_female, female_vs_male, large_court, int_court, small_court, large_vs_female, male_chased_juvenile, comments, observer
         large_vs_large = self.E1.get()
         large_vs_small = self.E2.get()
         small_vs_female = self.E4.get()
@@ -134,6 +139,7 @@ class get_behaviors:
         large_vs_female = self.E12.get()
         male_chased_juvenile = self.E13.get()
         comments = self.E11.get()
+        observer = self.E15.get()
 
 # to get frame to use for identifying the fish from the user; return the number of the frame to use
 def get_frame(name, rotate):
@@ -503,7 +509,8 @@ if __name__ == "__main__":
     'total_fish' : total_fish,
     'time_of_clip' : time_in_video,
     'date' : date,
-    'comments' : comments
+    'comments' : comments,
+    'observer' : observer
     }
 
     # figure out how to name the resulting file
@@ -531,6 +538,6 @@ if __name__ == "__main__":
         tkMessageBox.showinfo("oh no!","oh no! problem writing the data file. See Luke.")
 
 
-    print "\n\nall done. wahoo!\nthe data has been saved at {}".format(data_dir + '/' + name)
+    # print "\n\nall done. wahoo!\nthe data has been saved at {}".format(data_dir + '/' + name)
 
     cv2.destroyAllWindows()
