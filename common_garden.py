@@ -67,6 +67,11 @@ class get_behaviors:
         self.label4.pack()
         self.E4.pack()
 
+        self.label16 = Label( master, text="number of times a small male was aggressive towards another small male:")
+        self.E16 = Entry(master, bd =5)
+        self.label16.pack()
+        self.E16.pack()
+
         self.label5 = Label( master, text="number of times an intermediate male was aggressive towards a female: ")
         self.E5 = Entry(master, bd =5)
         self.label5.pack()
@@ -140,6 +145,7 @@ class get_behaviors:
         male_chased_juvenile = self.E13.get()
         comments = self.E11.get()
         observer = self.E15.get()
+        small_vs_small = self.E16.get()
 
 # to get frame to use for identifying the fish from the user; return the number of the frame to use
 def get_frame(name, rotate):
@@ -510,7 +516,8 @@ if __name__ == "__main__":
     'time_of_clip' : time_in_video,
     'date' : date,
     'comments' : comments,
-    'observer' : observer
+    'observer' : observer,
+    'small_vs_small' : small_vs_small
     }
 
     # figure out how to name the resulting file
