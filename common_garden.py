@@ -130,7 +130,7 @@ class get_behaviors:
 
     # save variables when the submit button is pressed
     def on_button(self):
-        global large_vs_large, large_vs_small, small_vs_female, int_vs_female, int_vs_int, female_vs_female, female_vs_male, large_court, int_court, small_court, large_vs_female, male_chased_juvenile, comments, observer
+        global large_vs_large, large_vs_small, small_vs_female, int_vs_female, int_vs_int, female_vs_female, female_vs_male, large_court, int_court, small_court, large_vs_female, male_chased_juvenile, comments, observer, small_vs_small
         large_vs_large = self.E1.get()
         large_vs_small = self.E2.get()
         small_vs_female = self.E4.get()
@@ -146,6 +146,7 @@ class get_behaviors:
         comments = self.E11.get()
         observer = self.E15.get()
         small_vs_small = self.E16.get()
+        master.quit
 
 # to get frame to use for identifying the fish from the user; return the number of the frame to use
 def get_frame(name, rotate):
