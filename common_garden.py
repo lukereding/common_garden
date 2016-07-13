@@ -182,10 +182,11 @@ def get_frame(name, rotate):
         elif k == 27: # escape
             break
         # if the user gets to the end of the video, reset the video
-        elif (total_frames - frame_number) < 10:
-            cap.set(1,1)
-            ret, img = cap.read()
+        elif (total_frames - frame_number) < 20:
             frame_number = 1
+            ret = cap.set(1,frame_number)
+            ret, img = cap.read()
+
     cv2.destroyAllWindows; cv2.waitKey(1)
     cap.release()
     return frame_number
