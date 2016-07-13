@@ -9,6 +9,14 @@ ret <- function(entry){
   }
 }
 
+# bitchin' colors
+g <- c(0.9649929502500952, 0.9531129905215493, 0.9191510752734625, 0.8593537612656912, 0.8817604211736523, 0.7700023490859729, 0.7161563289278935, 0.8232880086631527, 0.6542005475652726, 0.561817977440984, 0.7615832423359858, 0.5861204102347762, 0.43022162338501957, 0.6871358461951652, 0.5600145030589199,0.3290447800273386, 0.587268798255875, 0.5516378970902409, 0.26991762664572966, 0.46791931434441575, 0.5330773688488463, 0.24073795863422207, 0.34003177164489373, 0.4786370052053605, 0.21805042635421357, 0.22328637568306292, 0.38237877700552625, 0.17250549177124488, 0.11951843162770594, 0.24320155229883056)
+greens <- c()
+for(i in seq(1, length(g), by = 3)){
+  greens %<>% c(rgb(g[i], g[1+i], g[2+i]))
+}
+greens <- colorRampPalette(greens)
+
 files <- list.files("/Users/lukereding/Documents/common_garden/data", pattern = "*.json", full.names = T)
 n <- length(files)
 
@@ -110,7 +118,21 @@ df %<>% mutate(total_courtship = large_courting + small_courting + intermediate_
 df %<>% mutate(total_aggression = large_vs_large + large_vs_small + int_vs_int + large_vs_female + int_vs_female + female_vs_female + female_vs_male)
 
 
-df %>% head
+# function to use to collapse all the videos from one day into a single row
+avg_if_numeric <- function(x){
+  if(!is.character(x)){
+    return(mean(x, na.rm=T))
+  }
+  else{
+    if(length(levels(factor(x))) > 1){
+      warning("you are trying to collapse non-matching characters. will take the first one, but beware.")
+    }
+    return(x[1])
+  }
+}
+
+# to get the sum total of each behavior for each day:
+df %<>% group_by(date, tank_id) %>% summarise_each(funs(avg_if_numeric))
 
 
 
@@ -184,7 +206,7 @@ df %>%
   ggplot(aes(treatment, total_courtship)) +
   geom_boxplot(aes(fill=treatment), outlier.shape=NA) +
   geom_jitter(width=0.3, height=0.15, aes(size = total_aggression)) +
-  scale_fill_manual(values=viridis(5)[1:4], guide=F) +
+  scale_fill_manual(values=greens(5)[1:4], guide=F) +
   ylab("# courtships") +
   ggtitle("number of courtship events per video") +
   theme_luke()
@@ -315,4 +337,6 @@ ggsave("no_focal.pdf", path = "/Users/lukereding/Documents/common_garden/data/")
 
 # to make into a single pdf:
 # pdfunite `ls -tr *.pdf` out.pdf
+
+
 
