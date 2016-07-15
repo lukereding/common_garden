@@ -1,3 +1,6 @@
+library(magrittr)
+library(rjson)
+library(dplyr)
 
 # helper function: returns NA if the feild doesn't exist, otherwise returns the value
 ret <- function(entry){
@@ -19,8 +22,6 @@ greens <- colorRampPalette(greens)
 
 files <- list.files("/Users/lukereding/Documents/common_garden/data", pattern = "*.json", full.names = T)
 n <- length(files)
-
-library(rjson)
 
 # create data frame
 df <- data.frame("video_name" = character(n),
@@ -46,9 +47,13 @@ df <- data.frame("video_name" = character(n),
                    "pairwise_distance_females"= double(n),
                    "pairewise_distance_juvs"= double(n),
                    "total_fish"= integer(n),
-                   "date"= character(n),stringsAsFactors=FALSE)
+                   "date"= character(n),
+                 "comments" = character(n),
+                 "small_vs_small" = integer(n),
+                 "observer" = character(n),
+                 stringsAsFactors=FALSE)
 
-library(magrittr)
+
 
 for(i in 1:length(files)){
   # read in data
@@ -71,7 +76,7 @@ for(i in 1:length(files)){
   df$number_large_male[i] <-  ret(json_data$number_large_male)%>% as.numeric
   df$number_small_male[i] <-  ret(json_data$number_small_male)%>% as.numeric
   df$number_model_female[i] <-  ret(json_data$number_model_female)%>% as.numeric
-  df$ male_chased_juvenile[i] <-  ret(json_data$male_chased_juvenile)%>% as.numeric
+  df$male_chased_juvenile[i] <-  ret(json_data$male_chased_juvenile)%>% as.numeric
   df$tank_id[i] <-  ret(json_data$tank_id) %>% as.character
   df$pairwise_distance_large_males[i] <-  ret(json_data$pairwise_distance_large_males)%>% as.numeric
   df$pairwise_distance_small_males[i] <-  ret(json_data$pairwise_distance_small_males)%>% as.numeric
@@ -79,32 +84,9 @@ for(i in 1:length(files)){
   df$pairewise_distance_juvs[i] <-  ret(json_data$pairewise_distance_juvs)%>% as.numeric
   df$total_fish[i] <-  ret(json_data$total_fish)%>% as.numeric
   df$date[i] <-  ret(json_data$date) %>% as.character
-  
-#   # rbind
-#   df <- rbind(df, c(video_name, 
-#                     large_vs_large,
-#                     large_vs_small,
-#                     int_vs_int,
-#                     large_vs_female,
-#                     small_vs_female,
-#                     int_vs_female,
-#                     female_vs_female,
-#                     female_vs_male,
-#                     large_courting,
-#                     intermediate_courting,
-#                     small_courting,
-#                     number_focal,
-#                     number_large_male,
-#                     number_small_male,
-#                     number_model_female,
-#                     male_chased_juvenile,
-#                     tank_id,
-#                     pairwise_distance_large_males,
-#                     pairwise_distance_small_males,
-#                     pairwise_distance_females,
-#                     pairewise_distance_juvs,
-#                     total_fish,
-#                     date))
+  df$comments[i] <-  ret(json_data$comments) %>% as.character
+  df$observer[i] <- ret(json_data$observer) %>% as.character
+  df$small_vs_small[i] <- ret(json_data$small_vs_small) %>% as.character
   
 }
 
@@ -134,10 +116,8 @@ avg_if_numeric <- function(x){
 # to get the sum total of each behavior for each day:
 df %<>% group_by(date, tank_id) %>% summarise_each(funs(avg_if_numeric))
 
-
-
-
-
+# get the dates worked out
+df$date %<>% as.Date(format = "%m-%d-%Y")
 
 # graph some things
 # define new theme
@@ -186,32 +166,156 @@ theme_luke <- function(font_size = 18, font_family = "", line_size = .5) {
     )
 }
 
+# multiplot function for later:
+# Multiple plot function
+#
+# ggplot objects can be passed in ..., or to plotlist (as a list of ggplot objects)
+# - cols:   Number of columns in layout
+# - layout: A matrix specifying the layout. If present, 'cols' is ignored.
+#
+# If the layout is something like matrix(c(1,2,3,3), nrow=2, byrow=TRUE),
+# then plot 1 will go in the upper left, 2 will go in the upper right, and
+# 3 will go all the way across the bottom.
+#
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  library(grid)
+  
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+  
+  numPlots = length(plots)
+  
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                     ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+  
+  if (numPlots==1) {
+    print(plots[[1]])
+    
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+    
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+      
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+
+
+################################
+############# ploting ##############
+######################################
 library(ggplot2)
 library(dplyr)
 library(viridis)
 
-# average courtships by large / intermediate males per video:
-# df %>% 
-#      group_by(treatment) %>% 
-#      summarise(avg_court = mean(total_courtship, na.rm=T)) %>% 
-#      ggplot(aes(treatment, avg_court)) +
-#               geom_bar(stat="identity", aes(fill = treatment)) +
-#   theme_luke() +
-#   ylab("average # courtship events per video") +
-#   scale_fill_manual(values =viridis(5)[1:4])
+
+################################
+######## time trends: ################
+#########################################
+
+
+# plot by date:
+ggplot(df, aes(date, total_aggression, color = treatment)) + 
+  geom_line(size=1.25, position = position_dodge(width=3)) +
+  scale_size(name = "total aggressions") +
+  theme_luke() + 
+  geom_point(aes(size = total_aggression),position = position_dodge(width=3)) +
+  ylab("average aggressions per video") +
+  # scale_color_manual(values=greens(5)[2:5]) +
+  scale_colour_brewer(palette = "Dark2") +
+  theme(axis.text.x=element_text(angle=45, hjust=1)) +
+  scale_x_date() 
+ggsave("aggressions_over_time.pdf", path = "/Users/lukereding/Documents/common_garden/data/")
+
+ggplot(df, aes(date, total_courtship, color = treatment)) + 
+  geom_line(size=1.25, position = position_dodge(width=3)) +
+  theme_luke() + 
+  scale_size(name = "total displays") +
+  geom_point(aes(size = total_courtship),position = position_dodge(width=3)) +
+  ylab("average displays per video") +
+  # scale_color_manual(values=greens(5)[2:5]) +
+  scale_colour_brewer(palette = "Dark2") +
+  theme(axis.text.x=element_text(angle=45, hjust=1)) +
+  scale_x_date() 
+ggsave("displays_over_time.pdf", path = "/Users/lukereding/Documents/common_garden/data/")
+
+ggplot(df, aes(date, pairewise_distance_juvs, color = treatment)) + 
+  geom_line(size=1.25, position = position_dodge(width=1)) +
+  theme_luke() + 
+  geom_point(size=3, position = position_dodge(width=1)) +
+  ylab("average distance between juvs. per video") +
+  # scale_color_manual(values=greens(5)[2:5]) +
+  scale_colour_brewer(palette = "Dark2") +
+  theme(axis.text.x=element_text(angle=45, hjust=1)) +
+  scale_x_date() 
+
+
+
+
+
+#########################################
+############### non-time plots: ###########
+###############################################
 
 
 df %>%
-  group_by(treatment) %>% 
   ggplot(aes(treatment, total_courtship)) +
   geom_boxplot(aes(fill=treatment), outlier.shape=NA) +
   geom_jitter(width=0.3, height=0.15, aes(size = total_aggression)) +
-  scale_fill_manual(values=greens(5)[1:4], guide=F) +
-  ylab("# courtships") +
+  scale_fill_brewer(palette = "Dark2", guide= F) +
+  scale_size(name = "total aggressions") + 
+  ylab("# courtships per video") +
   ggtitle("number of courtship events per video") +
   theme_luke()
+ggsave("number_total_displays.pdf", path = "/Users/lukereding/Documents/common_garden/data/")
 
-ggsave("no_courtships.pdf", path = "/Users/lukereding/Documents/common_garden/data/")
+
+######## for the grant ? #####
+
+
+courts <- df %>%
+  mutate(aggresion_towards_females = large_vs_female + small_vs_female + int_vs_female + female_vs_female) %>%
+  ggplot(aes(treatment, total_courtship)) +
+  geom_boxplot(aes(fill=treatment), outlier.shape=NA) +
+  # geom_jitter(width=0.3, height=0.15, aes(size = aggresion_towards_females)) +
+  geom_jitter(width=0.3, height=0) +
+  scale_fill_brewer(palette = "Dark2", guide= F) +
+  # scale_size(name = "chases towards\nfemales") + 
+  ylab("# courtships per video") +
+  ggtitle("number of courtship events per video") +
+  theme_luke() +
+  theme(legend.justification=c(1,0), legend.position=c(1,0.7))
+
+towards_females <- df %>%
+  mutate(aggression_towards_males = large_vs_large + large_vs_small + int_vs_int + female_vs_male) %>%
+  mutate(aggresion_towards_females = large_vs_female + small_vs_female + int_vs_female + female_vs_female) %>% 
+  ggplot(aes(treatment, aggresion_towards_females)) +
+  geom_boxplot(aes(fill=treatment), outlier.shape=NA) +
+  # geom_jitter(width=0.3, height=0.15, aes(size = total_courtship)) +
+  geom_jitter(width=0.3, height=0) +
+  scale_fill_brewer(palette = "Dark2", guide= F) +
+  # scale_size(name = "average displays\nper video") + 
+  ylab("# chases towards females") +
+  theme_luke() +
+  theme(legend.justification=c(0,1.1), legend.position=c(0.05,1))
+
+(x <- plot_grid(courts, towards_females))
+ggplot2::ggsave("for_grant.pdf", path = "/Users/lukereding/Documents/common_garden/data/", width = 11.3, height = 7.67)
+
+############################
 
 
 
@@ -226,20 +330,20 @@ df %>% group_by(treatment) %>% summarise(agg = mean(total_aggression)) %>%
 
 # box plot
 df %>%
-  group_by(treatment) %>% 
   ggplot(aes(treatment, total_aggression)) +
   geom_boxplot(aes(fill=treatment), outlier.shape=NA) +
-  geom_jitter(width=0.3, height=0.15, aes(size = total_courtship, shape = date)) +
-  scale_fill_manual(values=viridis(5)[1:4], guide=F) +
-  ylab("# aggressions") +
-  ggtitle("number of aggressive events per video") +
+  geom_jitter(width=0.3, height=0.15, aes(size = total_courtship)) +
+  scale_size(name = "number of\ndisplays") + 
+  scale_fill_brewer(palette = "Dark2", guide= F) +
+  ylab("# chases") +
+  ggtitle("average number of chases per video") +
   theme_luke()
 
 ggsave("no_aggressions.pdf", path = "/Users/lukereding/Documents/common_garden/data/")
 
 
 # large - large aggression
-df %>% filter(treatment == "LL") %>% select(large_vs_large) %>% ggplot(aes(large_vs_large)) + geom_dotplot() + theme_luke()
+# df %>% filter(treatment == "LL") %>% select(large_vs_large) %>% ggplot(aes(large_vs_large)) + geom_dotplot() + theme_luke()
 
 
 # number of females / large males identified
@@ -254,12 +358,11 @@ df %>% filter(treatment == "LL") %>% select(large_vs_large) %>% ggplot(aes(large
 #   scale_fill_manual(values =viridis(5)[1:4], guide = FALSE)
 
 df %>%
-  group_by(treatment) %>% 
   ggplot(aes(treatment, number_model_female)) +
   geom_boxplot(aes(fill=treatment), outlier.shape=NA) +
-  geom_jitter(width=0.2, aes(shape = date, color = number_focal, size=1.1)) + 
-  scale_colour_continuous(low="grey80", high="darkred") +
-  scale_fill_manual(values=viridis(5)[1:4], guide=F) +
+  geom_jitter(width=0.2, size=5, aes(color = number_focal)) +
+  scale_colour_continuous(low="white", high="forestgreen", name ="number focal\nfish identified") +
+  scale_fill_brewer(palette = "Dark2", guide= F) +
   ylab("# females") +
   ggtitle("number of adult females found per video") +
   theme_luke() +
@@ -280,12 +383,11 @@ ggsave("adult_females_found.pdf", path = "/Users/lukereding/Documents/common_gar
 #   scale_fill_manual(values =viridis(5)[1:4], guide = FALSE)
 
 df %>%
-  group_by(treatment) %>% 
   ggplot(aes(treatment, pairewise_distance_juvs)) +
   geom_boxplot(aes(fill=treatment), outlier.size = NA) +
-  geom_jitter(width=0.2, aes(color = total_aggression, shape = date, size=1.1)) + 
-  scale_fill_manual(values=viridis(5)[1:4], guide=F) +
-  scale_colour_continuous(low="grey80", high="darkred") +
+  geom_jitter(width=0.2, size = 5, aes(color = total_aggression)) + 
+  scale_fill_brewer(palette = "Dark2", guide= F) +
+  scale_colour_continuous(low="grey80", high="forestgreen") +
   ylab("# pixels") +
   ggtitle("distance between focal juveniles") +
   theme_luke() + 
@@ -300,9 +402,9 @@ df %>%
   group_by(treatment) %>% 
   ggplot(aes(treatment, pairwise_distance_large_males)) +
   geom_boxplot(aes(fill=treatment)) +
-  geom_jitter(width=0.2, aes(color = total_aggression, shape = date, size=1.1)) + 
-  scale_fill_manual(values=viridis(5)[1:4], guide=F) +
-  scale_colour_continuous(low="grey80", high="darkred") +
+  geom_jitter(width=0.2, size=5, aes(color = total_aggression)) + 
+  scale_fill_brewer(palette = "Dark2", guide= F) +
+  scale_colour_continuous(low="grey80", high="forestgreen") +
   ylab("# pixels") +
   ggtitle("distance between large / intermediate males") +
   theme_luke()
@@ -312,12 +414,11 @@ ggsave("dist_bt_large_males.pdf", path = "/Users/lukereding/Documents/common_gar
 # average distance between model females
 
 df %>%
-  group_by(treatment) %>% 
   ggplot(aes(treatment, pairwise_distance_females)) +
   geom_boxplot(aes(fill=treatment), outlier.shape = NA) +
-  geom_jitter(width=0.2, aes(shape = date,color = total_aggression, size=1.1)) +
-  scale_colour_continuous(low="grey80", high="darkred") +
-  scale_fill_manual(values=viridis(5)[1:4], guide=F) +
+  geom_jitter(width=0.2, size= 5, aes(color = total_aggression)) +
+  scale_colour_continuous(low="grey80", high="forestgreen") +
+  scale_fill_brewer(palette = "Dark2", guide= F) +
   ylab("# pixels") +
   ggtitle("distance between model females") +
   theme_luke()
@@ -325,11 +426,10 @@ ggsave("dist_bt_model_females.pdf", path = "/Users/lukereding/Documents/common_g
 
 
 df %>%
-  group_by(treatment) %>% 
   ggplot(aes(treatment, number_focal)) +
   geom_boxplot(aes(fill=treatment), outlier.shape=NA) +
-  geom_jitter(width=0.3, height=0.15, aes( shape = date)) +
-  scale_fill_manual(values=viridis(5)[1:4], guide=F) +
+  geom_jitter(width=0.3, height=0.15, size = 5) +
+  scale_fill_brewer(palette = "Dark2", guide= F) +
   ylab("# number focal fish") +
   ggtitle("number of focal individuals per video") +
   theme_luke()
