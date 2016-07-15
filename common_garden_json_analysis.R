@@ -326,7 +326,7 @@ df %>% group_by(treatment) %>% summarise(agg = mean(total_aggression)) %>%
   geom_bar(stat="identity", aes(fill = treatment)) +
   theme_luke() +
   ylab("average # aggressive events per video") +
-  scale_fill_manual(values =viridis(5)[1:4], guide = FALSE)
+  scale_fill_manual(values =greens(5), guide = FALSE)
 
 # box plot
 df %>%
