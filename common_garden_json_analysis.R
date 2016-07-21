@@ -20,8 +20,14 @@ for(i in seq(1, length(g), by = 3)){
 }
 greens <- colorRampPalette(greens)
 
+di <- c("#0072B2", "#009E73", "#D55E00", "#CC79A7", "#F0E442", "#65B4E9")
+diverging <- function(n){
+  return(rep(di,10)[1:n])
+}
+
+
 files <- list.files("/Users/lukereding/Documents/common_garden/data", pattern = "*.json", full.names = T)
-n <- length(files)
+(n <- length(files))
 
 # create data frame
 df <- data.frame("video_name" = character(n),
@@ -113,8 +119,20 @@ avg_if_numeric <- function(x){
   }
 }
 
+sum_if_numeric <- function(x){
+  if(!is.character(x)){
+    return(sum(x, na.rm=T))
+  }
+  else{
+    if(length(levels(factor(x))) > 1){
+      warning("you are trying to collapse non-matching characters. will take the first one, but beware.")
+    }
+    return(x[1])
+  }
+}
+
 # to get the sum total of each behavior for each day:
-df %<>% group_by(date, tank_id) %>% summarise_each(funs(avg_if_numeric))
+df %<>% group_by(date, tank_id) %>% summarise_each(funs(sum_if_numeric))
 
 # get the dates worked out
 df$date %<>% as.Date(format = "%m-%d-%Y")
@@ -275,7 +293,8 @@ df %>%
   ggplot(aes(treatment, total_courtship)) +
   geom_boxplot(aes(fill=treatment), outlier.shape=NA) +
   geom_jitter(width=0.3, height=0.15, aes(size = total_aggression)) +
-  scale_fill_brewer(palette = "Dark2", guide= F) +
+  scale_fill_manual(values=diverging(5), guide=F) + 
+  # scale_fill_brewer(palette = "Dark2", guide= F) +
   scale_size(name = "total aggressions") + 
   ylab("# courtships per video") +
   ggtitle("number of courtship events per video") +
@@ -285,18 +304,19 @@ ggsave("number_total_displays.pdf", path = "/Users/lukereding/Documents/common_g
 
 ######## for the grant ? #####
 
-
+require(cowplot)
 courts <- df %>%
   mutate(aggresion_towards_females = large_vs_female + small_vs_female + int_vs_female + female_vs_female) %>%
   ggplot(aes(treatment, total_courtship)) +
   geom_boxplot(aes(fill=treatment), outlier.shape=NA) +
   # geom_jitter(width=0.3, height=0.15, aes(size = aggresion_towards_females)) +
   geom_jitter(width=0.3, height=0) +
-  scale_fill_brewer(palette = "Dark2", guide= F) +
+  scale_fill_manual(values=diverging(5), guide=F) + 
   # scale_size(name = "chases towards\nfemales") + 
   ylab("# courtships per video") +
-  ggtitle("number of courtship events per video") +
+  # ggtitle("number of courtship events per video") +
   theme_luke() +
+  ylim(c(0,8)) +
   theme(legend.justification=c(1,0), legend.position=c(1,0.7))
 
 towards_females <- df %>%
@@ -306,10 +326,11 @@ towards_females <- df %>%
   geom_boxplot(aes(fill=treatment), outlier.shape=NA) +
   # geom_jitter(width=0.3, height=0.15, aes(size = total_courtship)) +
   geom_jitter(width=0.3, height=0) +
-  scale_fill_brewer(palette = "Dark2", guide= F) +
+  scale_fill_manual(values=diverging(5), guide=F) + 
   # scale_size(name = "average displays\nper video") + 
-  ylab("# chases towards females") +
+  ylab("# chases towards females per video") +
   theme_luke() +
+  ylim(c(0,8)) +
   theme(legend.justification=c(0,1.1), legend.position=c(0.05,1))
 
 (x <- plot_grid(courts, towards_females))
