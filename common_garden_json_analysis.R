@@ -305,13 +305,16 @@ ggsave("number_total_displays.pdf", path = "/Users/lukereding/Documents/common_g
 ######## for the grant ? #####
 
 require(cowplot)
+
+df$treatment %<>% factor(levels = c("LS", "INT", "LL","SS","FF"))
+
 courts <- df %>%
   mutate(aggresion_towards_females = large_vs_female + small_vs_female + int_vs_female + female_vs_female) %>%
   ggplot(aes(treatment, total_courtship)) +
   geom_boxplot(aes(fill=treatment), outlier.shape=NA) +
   # geom_jitter(width=0.3, height=0.15, aes(size = aggresion_towards_females)) +
   geom_jitter(width=0.3, height=0) +
-  scale_fill_manual(values=diverging(5), guide=F) + 
+  scale_fill_manual(values=c("darkorchid4","darkorchid4",rep("grey50",3)), guide=F) + 
   # scale_size(name = "chases towards\nfemales") + 
   ylab("# courtships per video") +
   # ggtitle("number of courtship events per video") +
@@ -326,7 +329,7 @@ towards_females <- df %>%
   geom_boxplot(aes(fill=treatment), outlier.shape=NA) +
   # geom_jitter(width=0.3, height=0.15, aes(size = total_courtship)) +
   geom_jitter(width=0.3, height=0) +
-  scale_fill_manual(values=diverging(5), guide=F) + 
+  scale_fill_manual(values=c("darkorchid4","darkorchid4",rep("grey50",3)), guide=F) + 
   # scale_size(name = "average displays\nper video") + 
   ylab("# chases towards females per video") +
   theme_luke() +
