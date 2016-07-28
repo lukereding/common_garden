@@ -26,8 +26,11 @@ diverging <- function(n){
 }
 
 
-files <- list.files("/Users/lukereding/Documents/common_garden/data", pattern = "*.json", full.names = T)
+files <- list.files("/Users/lukereding/Desktop/common_garden/data", pattern = "*.json", full.names = T)
 (n <- length(files))
+
+
+library(rjson)
 
 # create data frame
 df <- data.frame("video_name" = character(n),
@@ -63,8 +66,8 @@ df <- data.frame("video_name" = character(n),
 
 for(i in 1:length(files)){
   # read in data
-  json_data <- fromJSON(file=files[i])
-  
+  json_data <- rjson::fromJSON(file=files[i])
+  print(i)
   # extract the data
   df$video_name[i] <-  ret(json_data$video_name) %>% as.character
   df$large_vs_large[i] <-  ret(json_data$large_vs_large) %>% as.numeric
@@ -105,6 +108,8 @@ df %<>% mutate(total_courtship = large_courting + small_courting + intermediate_
 # get overall (total) aggression
 df %<>% mutate(total_aggression = large_vs_large + large_vs_small + int_vs_int + large_vs_female + int_vs_female + female_vs_female + female_vs_male)
 
+# make column that denotes the date / tank combo
+df %<>% unite(col = id, tank_id, date, remove = FALSE)
 
 # function to use to collapse all the videos from one day into a single row
 avg_if_numeric <- function(x){
@@ -131,11 +136,30 @@ sum_if_numeric <- function(x){
   }
 }
 
-# to get the sum total of each behavior for each day:
-df %<>% group_by(date, tank_id) %>% summarise_each(funs(sum_if_numeric))
+
+# to get the sum total of each behavior for each day
+# exclude videos for which there are fewer than three json files
+# first get the names of the videos for which there are 3 videos analyzed
+good_videos = df %>% 
+  group_by(id) %>% 
+  tally %>% 
+  filter(n ==3) %>% 
+  .$id
+df$good_video <- ifelse(df$id %in% good_videos, TRUE, FALSE)
+
+# the dataframe containing the averages
+df_avg <- df %>% group_by(id) %>% summarise_each(funs(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))
+
+# the more complete dataframe containing the sums
+df %<>% filter(good_video == TRUE) %>% group_by(id) %>% summarise_each(funs(if(is.numeric(.)) sum(., na.rm = TRUE) else first(.)))
+
+
+
+
 
 # get the dates worked out
 df$date %<>% as.Date(format = "%m-%d-%Y")
+df_avg$date %<>% as.Date(format = "%m-%d-%Y")
 
 # graph some things
 # define new theme
@@ -231,6 +255,13 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
   }
 }
 
+# for plotting sample sizes:
+
+give.n <- function(x){
+  return(c(y = median(x)*1.02, label = length(x))) 
+  # experiment with the multiplier to find the perfect position
+}
+
 
 ################################
 ############# ploting ##############
@@ -302,13 +333,17 @@ df %>%
 ggsave("number_total_displays.pdf", path = "/Users/lukereding/Documents/common_garden/data/")
 
 
-######## for the grant ? #####
+######## for the grant #####
+
+
+### sums of behaviors, only videos for which each of the three short videos was scored
 
 require(cowplot)
 
 df$treatment %<>% factor(levels = c("LS", "INT", "LL","SS","FF"))
 
 courts <- df %>%
+  filter(good_video == TRUE) %>%
   mutate(aggresion_towards_females = large_vs_female + small_vs_female + int_vs_female + female_vs_female) %>%
   ggplot(aes(treatment, total_courtship)) +
   geom_boxplot(aes(fill=treatment), outlier.shape=NA) +
@@ -319,10 +354,10 @@ courts <- df %>%
   ylab("# courtships per video") +
   # ggtitle("number of courtship events per video") +
   theme_luke() +
-  ylim(c(0,8)) +
-  theme(legend.justification=c(1,0), legend.position=c(1,0.7))
+  ylim(c(0,8))
 
 towards_females <- df %>%
+  filter(good_video == TRUE) %>%
   mutate(aggression_towards_males = large_vs_large + large_vs_small + int_vs_int + female_vs_male) %>%
   mutate(aggresion_towards_females = large_vs_female + small_vs_female + int_vs_female + female_vs_female) %>% 
   ggplot(aes(treatment, aggresion_towards_females)) +
@@ -336,8 +371,43 @@ towards_females <- df %>%
   ylim(c(0,8)) +
   theme(legend.justification=c(0,1.1), legend.position=c(0.05,1))
 
-(x <- plot_grid(courts, towards_females))
-ggplot2::ggsave("for_grant.pdf", path = "/Users/lukereding/Documents/common_garden/data/", width = 11.3, height = 7.67)
+(x <- plot_grid(courts, towards_females, labels = c("a","b")))
+ggplot2::ggsave("for_grant.pdf", path = "/Users/lukereding/Desktop/common_garden/data/", width = 11.3, height = 7.67)
+
+### averages of behaviors, for all videos scored
+
+df_avg$treatment %<>% factor(levels = c("LS", "INT", "LL","SS","FF"))
+
+courts <- df_avg %>%
+  mutate(aggresion_towards_females = large_vs_female + small_vs_female + int_vs_female + female_vs_female) %>%
+  ggplot(aes(treatment, total_courtship)) +
+  geom_boxplot(aes(fill=treatment), outlier.shape=NA) +
+  # geom_jitter(width=0.3, height=0.15, aes(size = aggresion_towards_females)) +
+  geom_jitter(width=0.3, height=0) +
+  scale_fill_manual(values=c("darkorchid4","darkorchid4",rep("grey50",3)), guide=F) + 
+  # scale_size(name = "chases towards\nfemales") + 
+  ylab("average # courtships per video") +
+  # ggtitle("number of courtship events per video") +
+  theme_luke() +
+  ylim(c(0,4)) 
+
+towards_females <- df_avg %>%
+  mutate(aggression_towards_males = large_vs_large + large_vs_small + int_vs_int + female_vs_male) %>%
+  mutate(aggresion_towards_females = large_vs_female + small_vs_female + int_vs_female + female_vs_female) %>% 
+  ggplot(aes(treatment, aggresion_towards_females)) +
+  geom_boxplot(aes(fill=treatment), outlier.shape=NA) +
+  # geom_jitter(width=0.3, height=0.15, aes(size = total_courtship)) +
+  geom_jitter(width=0.3, height=0) +
+  scale_fill_manual(values=c("darkorchid4","darkorchid4",rep("grey50",3)), guide=F) + 
+  # scale_size(name = "average displays\nper video") + 
+  ylab("average # chases towards females per video") +
+  theme_luke() +
+  ylim(c(0,4)) +
+  theme(legend.justification=c(0,1.1), legend.position=c(0.05,1))
+
+(x <- plot_grid(courts, towards_females, labels=c("a","b")))
+ggplot2::ggsave("for_grant_avgs.pdf", path = "/Users/lukereding/Desktop/common_garden/data/", width = 11.3, height = 7.67)
+
 
 ############################
 
