@@ -372,7 +372,7 @@ towards_females <- df %>%
   theme(legend.justification=c(0,1.1), legend.position=c(0.05,1))
 
 (x <- plot_grid(courts, towards_females, labels = c("a","b")))
-ggplot2::ggsave("for_grant.pdf", path = "/Users/lukereding/Desktop/common_garden/data/", width = 8, height = 6)
+ggplot2::ggsave("for_grant.pdf", path = "/Users/lukereding/Desktop/common_garden/data/", width = 11.3, height = 7.67)
 
 ### averages of behaviors, for all videos scored
 
@@ -406,7 +406,7 @@ towards_females <- df_avg %>%
   theme(legend.justification=c(0,1.1), legend.position=c(0.05,1))
 
 (x <- plot_grid(courts, towards_females, labels=c("a","b")))
-ggplot2::ggsave("for_grant_avgs.pdf", path = "/Users/lukereding/Desktop/common_garden/data/", width = 8, height = 6)
+ggplot2::ggsave("for_grant_avgs.pdf", path = "/Users/lukereding/Desktop/common_garden/data/", width = 11.3, height = 7.67)
 
 
 ############################
