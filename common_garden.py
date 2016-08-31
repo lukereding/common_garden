@@ -146,7 +146,7 @@ class get_behaviors:
         comments = self.E11.get()
         observer = self.E15.get()
         small_vs_small = self.E16.get()
-        master.quit
+        #master.quit()
 
 # to get frame to use for identifying the fish from the user; return the number of the frame to use
 def get_frame(name, rotate):
