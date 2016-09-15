@@ -360,7 +360,7 @@ def show_video(name):
             k = cv2.waitKey(20)
             if k == 27:
                 break
-            elif k == 114:
+            elif k == ord('a'):
                 rotate = False if rotate is True else True
 
     # When everything done, release the capture
