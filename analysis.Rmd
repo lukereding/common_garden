@@ -1,0 +1,638 @@
+---
+title: "common garden tank analysis"
+author: "luke reding"
+date: "September 16, 2016"
+output: 
+  html_document: 
+    fig_height: 6
+    highlight: tango
+    theme: flatly
+    toc: yes
+---
+
+remind reader of what LL, LS, etc. means
+also break things apart by round / replicate
+
+```{r}
+library(magrittr)
+library(rjson)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+
+
+# helper function: returns NA if the feild doesn't exist, otherwise returns the value
+ret <- function(entry){
+  if(is.null(entry)){
+    return("NA")
+  }
+  else{
+    return(entry)
+  }
+}
+
+# bitchin' colors
+g <- c(0.9649929502500952, 0.9531129905215493, 0.9191510752734625, 0.8593537612656912, 0.8817604211736523, 0.7700023490859729, 0.7161563289278935, 0.8232880086631527, 0.6542005475652726, 0.561817977440984, 0.7615832423359858, 0.5861204102347762, 0.43022162338501957, 0.6871358461951652, 0.5600145030589199,0.3290447800273386, 0.587268798255875, 0.5516378970902409, 0.26991762664572966, 0.46791931434441575, 0.5330773688488463, 0.24073795863422207, 0.34003177164489373, 0.4786370052053605, 0.21805042635421357, 0.22328637568306292, 0.38237877700552625, 0.17250549177124488, 0.11951843162770594, 0.24320155229883056)
+greens <- c()
+for(i in seq(1, length(g), by = 3)){
+  greens %<>% c(rgb(g[i], g[1+i], g[2+i]))
+}
+greens <- colorRampPalette(greens)
+
+di <- c("#0072B2", "#009E73", "#D55E00", "#CC79A7", "#F0E442", "#65B4E9")
+diverging <- function(n){
+  return(rep(di,10)[1:n])
+}
+
+ theme
+
+theme_clean <- function(font_size = 18, font_family = "", line_size = .5) {
+  half_line <- font_size / 2
+  small_rel <- 0.857
+  small_size <- small_rel * font_size
+  
+  theme_grey(base_size = font_size, base_family = font_family) %+replace%
+    theme(
+      rect              = element_rect(fill = "transparent", colour = NA, color = NA, size = 0, linetype = 0),
+      text              = element_text(family = font_family, face = "plain", colour = "black",
+                                       size = font_size, hjust = 0.5, vjust = 0.5, angle = 0, lineheight = .9,
+                                       margin = ggplot2::margin(), debug = FALSE),
+      axis.text         = element_text(colour = "black", size = small_size),
+      #axis.title        = element_text(face = "bold"),
+      axis.text.x       = element_text(margin = ggplot2::margin(t = small_size / 4), vjust = 1),
+      axis.text.y       = element_text(margin = ggplot2::margin(r = small_size / 4), hjust = 1),
+      axis.title.x      = element_text(
+        margin = ggplot2::margin(t = small_size / 2, b = small_size / 4)
+      ),
+      axis.title.y      = element_text(
+        angle = 90,
+        margin = ggplot2::margin(r = small_size / 2, l = small_size / 4),
+      ),
+      axis.ticks        = element_line(colour = "black", size = line_size),
+      axis.line.x       = element_line(colour = "black", size = line_size),
+      axis.line.y       = element_line(colour = "black", size = line_size),
+      legend.key        = element_blank(),
+      legend.margin     = grid::unit(0.1, "cm"),
+      legend.key.size   = grid::unit(1, "lines"),
+      legend.text       = element_text(size = rel(small_rel)),
+      #    legend.position   = c(-0.03, 1.05),
+      # legend.justification = c("left", "right"),
+      panel.background  = element_blank(),
+      panel.border      = element_blank(),
+      panel.grid.major  = element_blank(),
+      panel.grid.minor  = element_blank(),
+      strip.text        = element_text(size = rel(small_rel)),
+      strip.background  = element_rect(fill = "grey80", colour = "grey50", size = 0),
+      plot.background   = element_blank(),
+      plot.title        = element_text(face = "bold",
+                                       size = font_size,
+                                       margin = ggplot2::margin(b = half_line))
+    )
+}
+
+
+```
+
+Import json files.
+
+```{r}
+files <- list.files("/Users/lukereding/Documents/common_garden/data", pattern = "*.json", full.names = T)
+```
+
+We have scored `r length(files)` of these short, 10-second videos.
+
+# reading in the `json` files
+
+Now that we've got the list of the file names, we'll read them in one by one, extract various quantities, and organize everything into a data frame.
+
+A single json file looks something like this:
+
+```{r}
+
+rjson::fromJSON(file=files[5])
+
+```
+
+
+```{r, message=F, warning=F}
+
+library(rjson)
+
+n <- length(files)
+# create data frame
+df <- data.frame("video_name" = character(n),
+                   "large_vs_large" =integer(n),
+                   "large_vs_small"= integer(n),
+                   "int_vs_int"= integer(n),
+                   "large_vs_female"= integer(n),
+                   "small_vs_female"= integer(n),
+                   "int_vs_female"= integer(n),
+                   "female_vs_female"= integer(n),
+                   "female_vs_male"= integer(n),
+                   "large_courting"= integer(n),
+                   "intermediate_courting"= integer(n),
+                   "small_courting"= integer(n),
+                   "number_focal"= integer(n),
+                   "number_large_male"= integer(n),
+                   "number_small_male"= integer(n),
+                   "number_model_female"= integer(n),
+                   "male_chased_juvenile"= integer(n),
+                   "tank_id"= character(n),
+                   "pairwise_distance_large_males"= double(n),
+                   "pairwise_distance_small_males"= double(n),
+                   "pairwise_distance_females"= double(n),
+                   "pairewise_distance_juvs"= double(n),
+                   "total_fish"= integer(n),
+                   "date"= character(n),
+                 "comments" = character(n),
+                 "small_vs_small" = integer(n),
+                 "observer" = character(n),
+                 stringsAsFactors=FALSE)
+
+
+
+for(i in 1:length(files)){
+  # read in data
+  json_data <- rjson::fromJSON(file=files[i])
+  # print(i)
+  # extract the data
+  df$video_name[i] <-  ret(json_data$video_name) %>% as.character
+  df$large_vs_large[i] <-  ret(json_data$large_vs_large) %>% as.numeric
+  df$large_vs_small[i] <-  ret(json_data$large_vs_small)%>% as.numeric
+  df$int_vs_int[i] <-  ret(json_data$int_vs_int)%>% as.numeric
+  df$large_vs_female[i] <-  ret(json_data$large_vs_female)%>% as.numeric
+  df$small_vs_female[i] <-  ret(json_data$small_vs_female)%>% as.numeric
+  df$int_vs_female[i] <-  ret(json_data$int_vs_female)%>% as.numeric
+  df$female_vs_female[i] <-  ret(json_data$female_vs_female)%>% as.numeric
+  df$female_vs_male[i] <-  ret(json_data$female_vs_male)%>% as.numeric
+  df$large_courting[i] <-  ret(json_data$large_courting)%>% as.numeric
+  df$intermediate_courting[i] <-  ret(json_data$intermediate_courting)%>% as.numeric
+  df$small_courting[i] <-  ret(json_data$small_courting)%>% as.numeric
+  df$number_focal[i] <-  ret(json_data$number_focal)%>% as.numeric
+  df$number_large_male[i] <-  ret(json_data$number_large_male)%>% as.numeric
+  df$number_small_male[i] <-  ret(json_data$number_small_male)%>% as.numeric
+  df$number_model_female[i] <-  ret(json_data$number_model_female)%>% as.numeric
+  df$male_chased_juvenile[i] <-  ret(json_data$male_chased_juvenile)%>% as.numeric
+  df$tank_id[i] <-  ret(json_data$tank_id) %>% as.character
+  df$pairwise_distance_large_males[i] <-  ret(json_data$pairwise_distance_large_males)%>% as.numeric
+  df$pairwise_distance_small_males[i] <-  ret(json_data$pairwise_distance_small_males)%>% as.numeric
+  df$pairwise_distance_females[i] <-  ret(json_data$pairwise_distance_females)%>% as.numeric
+  df$pairewise_distance_juvs[i] <-  ret(json_data$pairewise_distance_juvs)%>% as.numeric
+  df$total_fish[i] <-  ret(json_data$total_fish)%>% as.numeric
+  df$date[i] <-  ret(json_data$date) %>% as.character
+  df$comments[i] <-  ret(json_data$comments) %>% as.character
+  df$observer[i] <- ret(json_data$observer) %>% as.character
+  df$small_vs_small[i] <- ret(json_data$small_vs_small) %>% as.character
+  
+}
+
+# get treatment
+df$treatment <- gsub("[[:digit:]]","", df$tank_id)
+
+# get total courtship events:
+df %<>% mutate(total_courtship = large_courting + small_courting + intermediate_courting)
+
+# get overall (total) aggression
+df %<>% mutate(total_aggression = large_vs_large + large_vs_small + int_vs_int + large_vs_female + int_vs_female + female_vs_female + female_vs_male)
+
+# make column that denotes the date / tank combo
+df %<>% unite(col = id, tank_id, date, remove = FALSE)
+
+```
+
+
+# wrangling
+
+Now I define a couple functions that are useful went collapsing all the trials from a given day into a single row. This isn't a particularly elegant wasy of doing things, but it works.
+
+
+```{r}
+
+
+# function to use to collapse all the videos from one day into a single row
+avg_if_numeric <- function(x){
+  if(!is.character(x)){
+    return(mean(x, na.rm=T))
+  }
+  else{
+    if(length(levels(factor(x))) > 1){
+      warning("you are trying to collapse non-matching characters. will take the first one, but beware.")
+    }
+    return(x[1])
+  }
+}
+
+sum_if_numeric <- function(x){
+  if(!is.character(x)){
+    return(sum(x, na.rm=T))
+  }
+  else{
+    if(length(levels(factor(x))) > 1){
+      warning("you are trying to collapse non-matching characters. will take the first one, but beware.")
+    }
+    return(x[1])
+  }
+}
+
+
+```
+
+
+I now create two data frame. `df_avg` contains average behaviors from one of these videos. `df` contains sums.
+
+Why do we need two data frames?
+
+For some of the videos, for whatever reason, we only have two instead of three short videos. If we want to use all the data we have, we should use `df_avg` because data from tanks where we only have two videos are comparable to tanks where we have three videos. If we want to be conservative and make sure we have a totally complete three short videos for each tank / week, we can use `df.`
+
+
+```{r}
+
+# to get the sum total of each behavior for each day
+# exclude videos for which there are fewer than three json files
+# first get the names of the videos for which there are 3 videos analyzed
+good_videos = df %>% 
+  group_by(id) %>% 
+  tally %>% 
+  filter(n ==3) %>% 
+  .$id
+df$good_video <- ifelse(df$id %in% good_videos, TRUE, FALSE)
+
+# the dataframe containing the averages
+df_avg <- df %>% 
+  group_by(id) %>% 
+  summarise_each(funs(if(is.numeric(.)) mean(., na.rm = TRUE) else first(.)))
+
+# the more complete dataframe containing the sums
+df %<>% 
+  filter(good_video == TRUE) %>% 
+  group_by(id) %>% 
+  summarise_each(funs(if(is.numeric(.)) sum(., na.rm = TRUE) else first(.)))
+
+df$date %<>% as.Date(format = "%m-%d-%Y")
+df_avg$date %<>% as.Date(format = "%m-%d-%Y")
+
+```
+
+
+`df_avg` has `r nrow(df_avg)` rows while `df` has `r nrow(df)`, meaning that we're missing some data for `r nrow(df_avg) - nrow(df)` videos.
+
+-----------
+
+# visualizing the dataset
+
+
+## time trends
+
+```{r}
+# for adding sample sizes to plots
+give.n <- function(x){
+  return(c(y = median(x)*1.02, label = length(x))) 
+  # experiment with the multiplier to find the perfect position
+}
+
+ggplot(df, aes(date, total_aggression, color = treatment)) + 
+  # geom_line(size=1.25, position = position_dodge(width=3)) +
+  geom_smooth(se=F)+
+  theme_clean() + 
+  geom_point(size = 2.4, position = position_dodge(width=3)) +
+  ylab("average aggressions per video") +
+  # scale_color_manual(values=greens(5)[2:5]) +
+  scale_colour_brewer(palette = "Dark2") +
+  theme(axis.text.x=element_text(angle=45, hjust=1)) +
+  scale_x_date() +
+  ggtitle("aggression over time (loess smoothed)")
+
+
+ggplot(df, aes(date, total_courtship, color = treatment)) + 
+  # geom_line(size=1.25, position = position_dodge(width=3)) +
+  theme_clean() + 
+  geom_smooth(se=F)+
+  geom_point(size = 2.4, position = position_dodge(width=3)) +
+  ylab("average displays per video") +
+  # scale_color_manual(values=greens(5)[2:5]) +
+  scale_colour_brewer(palette = "Dark2") +
+  theme(axis.text.x=element_text(angle=45, hjust=1)) +
+  scale_x_date() +
+  ggtitle("displays over time (loess smoothed)")
+
+ggplot(df, aes(date, pairewise_distance_juvs, color = treatment)) + 
+  # geom_line(size=1.25, position = position_dodge(width=1)) +
+  theme_clean() + 
+  geom_smooth(se=F)+
+  geom_point(size=3, position = position_dodge(width=1)) +
+  ylab("average distance between juvs. per video") +
+  # scale_color_manual(values=greens(5)[2:5]) +
+  scale_colour_brewer(palette = "Dark2") +
+  theme(axis.text.x=element_text(angle=45, hjust=1)) +
+  scale_x_date() +
+  ggtitle("average distance between juvs")
+
+
+
+ggplot(df, aes(date, int_vs_int, color = treatment)) + 
+  # geom_line(size=1.25, position = position_dodge(width=1)) +
+  theme_clean() + 
+  geom_smooth(se=F)+
+  geom_point(size=3, position = position_dodge(width=1)) +
+  ylab("# aggressive events") +
+  # scale_color_manual(values=greens(5)[2:5]) +
+  scale_colour_brewer(palette = "Dark2") +
+  theme(axis.text.x=element_text(angle=45, hjust=1)) +
+  scale_x_date() +
+  ggtitle("int. vs int. aggression over time")
+
+ggplot(df, aes(date, male_chased_juvenile, color = treatment)) + 
+  # geom_line(size=1.25, position = position_dodge(width=1)) +
+  theme_clean() + 
+  geom_smooth(se=F, method="lm")+
+  geom_point(size=3, position = position_dodge(width=1)) +
+  ylab("# aggressive events") +
+  # scale_color_manual(values=greens(5)[2:5]) +
+  scale_colour_brewer(palette = "Dark2") +
+  theme(axis.text.x=element_text(angle=45, hjust=1)) +
+  scale_x_date() +
+  ggtitle("male -> juvenile aggression over time")
+
+ggplot(df, aes(date, large_vs_large, color = treatment)) + 
+  # geom_line(size=1.25, position = position_dodge(width=1)) +
+  theme_clean() + 
+  geom_smooth(se=F)+
+  geom_point(size=3, position = position_dodge(width=1)) +
+  ylab("# aggressive events") +
+  # scale_color_manual(values=greens(5)[2:5]) +
+  scale_colour_brewer(palette = "Dark2") +
+  theme(axis.text.x=element_text(angle=45, hjust=1)) +
+  scale_x_date() +
+  ggtitle("large -> large aggression over time")
+
+
+ggplot(df, aes(date, total_fish, color = treatment)) + 
+  # geom_line(size=1.25, position = position_dodge(width=1)) +
+  theme_clean() + 
+  geom_smooth(se=F)+
+  geom_point(size=3, position = position_dodge(width=1)) +
+  ylab("total # of fish") +
+  # scale_color_manual(values=greens(5)[2:5]) +
+  scale_colour_brewer(palette = "Dark2") +
+  theme(axis.text.x=element_text(angle=45, hjust=1)) +
+  scale_x_date() +
+  ggtitle("total # fish over time")
+
+```
+
+
+## figures for the grant 
+
+### sums of behaviors 
+
+```{r}
+
+
+require(cowplot)
+
+df$treatment %<>% factor(levels = c("LS", "INT", "LL","SS","FF"))
+
+courts <- df %>%
+  filter(good_video == TRUE) %>%
+  mutate(aggresion_towards_females = large_vs_female + small_vs_female + int_vs_female + female_vs_female) %>%
+  ggplot(aes(treatment, total_courtship)) +
+  geom_boxplot(aes(fill=treatment), outlier.shape=NA) +
+  # geom_jitter(width=0.3, height=0.15, aes(size = aggresion_towards_females)) +
+  geom_jitter(width=0.3, height=0) +
+  scale_fill_manual(values=c("darkorchid4","darkorchid4",rep("grey50",3)), guide=F) + 
+  # scale_size(name = "chases towards\nfemales") + 
+  ylab("# courtships per video") +
+  # ggtitle("number of courtship events per video") +
+  theme_clean() +
+  ylim(c(0,8))
+
+towards_females <- df %>%
+  filter(good_video == TRUE) %>%
+  mutate(aggression_towards_males = large_vs_large + large_vs_small + int_vs_int + female_vs_male) %>%
+  mutate(aggresion_towards_females = large_vs_female + small_vs_female + int_vs_female + female_vs_female) %>% 
+  ggplot(aes(treatment, aggresion_towards_females)) +
+  geom_boxplot(aes(fill=treatment), outlier.shape=NA) +
+  # geom_jitter(width=0.3, height=0.15, aes(size = total_courtship)) +
+  geom_jitter(width=0.3, height=0) +
+  scale_fill_manual(values=c("darkorchid4","darkorchid4",rep("grey50",3)), guide=F) + 
+  # scale_size(name = "average displays\nper video") + 
+  ylab("# chases towards females per video") +
+  theme_clean() +
+  ylim(c(0,8)) +
+  theme(legend.justification=c(0,1.1), legend.position=c(0.05,1))
+
+(x <- plot_grid(courts, towards_females, labels = c("a","b")))
+
+
+```
+
+### averages of behaviors
+
+
+```{r}
+
+df_avg$treatment %<>% factor(levels = c("LS", "INT", "LL","SS","FF"))
+
+courts <- df_avg %>%
+  mutate(aggresion_towards_females = large_vs_female + small_vs_female + int_vs_female + female_vs_female) %>%
+  ggplot(aes(treatment, total_courtship)) +
+  geom_boxplot(aes(fill=treatment), outlier.shape=NA) +
+  # geom_jitter(width=0.3, height=0.15, aes(size = aggresion_towards_females)) +
+  geom_jitter(width=0.3, height=0) +
+  scale_fill_manual(values=c("darkorchid4","darkorchid4",rep("grey50",3)), guide=F) + 
+  # scale_size(name = "chases towards\nfemales") + 
+  ylab("average # courtships per video") +
+  # ggtitle("number of courtship events per video") +
+  theme_clean() +
+  ylim(c(0,4)) 
+
+towards_females <- df_avg %>%
+  mutate(aggression_towards_males = large_vs_large + large_vs_small + int_vs_int + female_vs_male) %>%
+  mutate(aggresion_towards_females = large_vs_female + small_vs_female + int_vs_female + female_vs_female) %>% 
+  ggplot(aes(treatment, aggresion_towards_females)) +
+  geom_boxplot(aes(fill=treatment), outlier.shape=NA) +
+  # geom_jitter(width=0.3, height=0.15, aes(size = total_courtship)) +
+  geom_jitter(width=0.3, height=0) +
+  scale_fill_manual(values=c("darkorchid4","darkorchid4",rep("grey50",3)), guide=F) + 
+  # scale_size(name = "average displays\nper video") + 
+  ylab("average # chases towards females per video") +
+  theme_clean() +
+  ylim(c(0,4)) +
+  theme(legend.justification=c(0,1.1), legend.position=c(0.05,1))
+
+(x <- plot_grid(courts, towards_females, labels=c("a","b")))
+
+
+```
+
+## other
+
+```{r}
+
+df_avg %>%
+  ggplot(aes(treatment, total_courtship)) +
+  geom_boxplot(aes(fill=treatment), outlier.shape=NA) +
+  geom_jitter(width=0.3, height=0.15) +
+  scale_fill_manual(values=diverging(5), guide=F) + 
+  # scale_fill_brewer(palette = "Dark2", guide= F) +
+  scale_size(name = "total aggressions") + 
+  ylab("# courtships per video") +
+  ggtitle("number of courtship events per video") +
+  theme_clean()
+
+
+df_avg %>%
+  ggplot(aes(treatment, total_aggression)) +
+  geom_boxplot(aes(fill=treatment), outlier.shape=NA) +
+  geom_jitter(width=0.3, height=0.15) +
+  scale_size(name = "number of\ndisplays") + 
+  scale_fill_brewer(palette = "Dark2", guide= F) +
+  ylab("# chases") +
+  ggtitle("average number of chases per video") +
+  theme_clean()
+
+
+df_avg %>%
+  ggplot(aes(treatment, large_vs_large)) +
+  geom_boxplot(aes(fill=treatment), outlier.shape=NA) +
+  geom_jitter(width=0.3, height=0.15) +
+  scale_size(name = "number of\ndisplays") + 
+  scale_fill_brewer(palette = "Dark2", guide= F) +
+  ylab("# chases towards large males") +
+  ggtitle("average number of largre -> large agg. per video") +
+  theme_clean()
+
+
+df_avg %>%
+  ggplot(aes(treatment, number_model_female)) +
+  geom_boxplot(aes(fill=treatment), outlier.shape=NA) +
+  geom_jitter(width=0.2, size=2) +
+  scale_fill_brewer(palette = "Dark2", guide= F) +
+  ylab("# females") +
+  ggtitle("number of adult females found per video") +
+  theme_clean() +
+  scale_size_continuous(range = c(1,6))
+
+
+require(viridis)
+df_avg %>%
+  group_by(treatment) %>%
+  ggplot(aes(treatment, pairewise_distance_juvs, fill = treatment)) +
+  geom_boxplot() +
+  geom_jitter(size = 2) +
+  theme_clean() +
+  ylab("average # pixels") +
+  ggtitle("average distance between focal juveniles") +
+  scale_fill_brewer(palette = "Dark2", guide= F)
+
+df_avg %>%
+  ggplot(aes(treatment, pairewise_distance_juvs)) +
+  geom_boxplot(aes(fill=treatment), outlier.size = NA) +
+  geom_jitter(width=0.2, size = 2.4) + 
+  scale_fill_brewer(palette = "Dark2", guide= F) +
+  scale_colour_continuous(low="grey80", high="forestgreen") +
+  ylab("# pixels") +
+  ggtitle("distance between focal juveniles") +
+  theme_clean() + 
+  scale_size_continuous(range = c(2,6))
+
+
+df_avg %>%
+  group_by(treatment) %>% 
+  ggplot(aes(treatment, pairwise_distance_large_males)) +
+  geom_boxplot(aes(fill=treatment)) +
+  geom_jitter(width=0.2, size=2.4) + 
+  scale_fill_brewer(palette = "Dark2", guide= F) +
+  scale_colour_continuous(low="grey80", high="forestgreen") +
+  ylab("# pixels") +
+  ggtitle("distance between large / intermediate males") +
+  theme_clean()
+
+ggplot(df_avg, aes(total_courtship, total_aggression)) + 
+  geom_point() + 
+  facet_wrap(~ treatment) +
+  theme_minimal() +
+  ggtitle("relationship between courtship and aggression by treatment") +
+  xlab("total # courtship events") +
+  ylab("total # aggressive events") +
+  geom_smooth(se=F)
+
+
+df %>%
+  ggplot(aes(treatment, pairwise_distance_females)) +
+  geom_boxplot(aes(fill=treatment), outlier.shape = NA) +
+  geom_jitter(width=0.2, size= 2.4) +
+  scale_colour_continuous(low="grey80", high="forestgreen") +
+  scale_fill_brewer(palette = "Dark2", guide= F) +
+  ylab("# pixels") +
+  ggtitle("distance between model females") +
+  theme_clean()
+
+ggplot(df_avg, aes(pairewise_distance_juvs, pairwise_distance_females)) + 
+  geom_point() + 
+  facet_wrap(~ treatment) +
+  theme_minimal() +
+  ggtitle("relationship between distance b/t juvs and b/t females") +
+  xlab("pairwise distance between juvs") +
+  ylab("pairwise distance between females") +
+  geom_smooth(se=F)
+
+
+df %>%
+  ggplot(aes(treatment, number_focal)) +
+  geom_boxplot(aes(fill=treatment), outlier.shape=NA) +
+  geom_jitter(width=0.3, height=0.15, size = 2.4) +
+  scale_fill_brewer(palette = "Dark2", guide= F) +
+  ylab("# number focal fish") +
+  ggtitle("number of focal individuals per video") +
+  theme_clean()
+
+
+ggplot(df_avg, aes(total_aggression, pairewise_distance_juvs)) + 
+  geom_point() + 
+  facet_wrap(~ treatment) +
+  theme_clean() +
+  ggtitle("relationship between distance b/t juvs and b/t females") +
+  xlab("total aggression") +
+  ylab("pairwise distance between juvs") +
+  geom_smooth(se=F)
+
+ggplot(df_avg, aes(male_chased_juvenile, pairewise_distance_juvs)) + 
+  geom_point() + 
+  facet_wrap(~ treatment) +
+  theme_clean() +
+  ggtitle("relationship between distance b/t juvs and b/t females") +
+  xlab("male chased juvenile") +
+  ylab("pairwise distance between juvs") +
+  geom_smooth(se=F)
+
+ggplot(df_avg, aes(total_aggression, total_fish)) + 
+  geom_point() +
+  theme_clean() +
+  xlab("total # aggressive events") +
+  ylab("total # of fish") +
+  geom_smooth(se=F) +
+  facet_wrap(~ treatment)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
