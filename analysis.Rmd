@@ -499,9 +499,19 @@ df_avg %>%
   scale_size(name = "number of\ndisplays") + 
   scale_fill_brewer(palette = "Dark2", guide= F) +
   ylab("# chases towards large males") +
-  ggtitle("average number of largre -> large agg. per video") +
+  ggtitle("average number of large -> large agg. per video") +
   theme_clean()
+```
 
+Here and below I'm going to try a flexible approach in terms of analyzing things statistically. I'm using a permutation (=non-parametric) linear model using `lmp` and looking for post-doc differences between treatments using `glht` from the `multcomp` package.
+
+```{r}
+require(lmPerm)
+require(multcomp)
+df_avg %$% 
+lmp(large_vs_large ~ treatment, data = .) 
+%>% glht(linfct=mcp(treatment="Tukey")) 
+%>% summary
 
 df_avg %>%
   ggplot(aes(treatment, number_model_female)) +
@@ -513,29 +523,26 @@ df_avg %>%
   theme_clean() +
   scale_size_continuous(range = c(1,6))
 
+df_avg %$% 
+  lmp(number_model_female ~ treatment, data = .) %>% 
+  glht(linfct=mcp(treatment="Tukey")) %>% 
+  summary
 
 require(viridis)
 df_avg %>%
   group_by(treatment) %>%
   ggplot(aes(treatment, pairewise_distance_juvs, fill = treatment)) +
   geom_boxplot() +
-  geom_jitter(size = 2) +
+  geom_jitter(size = 2, width = 0.1) +
   theme_clean() +
   ylab("average # pixels") +
   ggtitle("average distance between focal juveniles") +
   scale_fill_brewer(palette = "Dark2", guide= F)
 
-df_avg %>%
-  ggplot(aes(treatment, pairewise_distance_juvs)) +
-  geom_boxplot(aes(fill=treatment), outlier.size = NA) +
-  geom_jitter(width=0.2, size = 2.4) + 
-  scale_fill_brewer(palette = "Dark2", guide= F) +
-  scale_colour_continuous(low="grey80", high="forestgreen") +
-  ylab("# pixels") +
-  ggtitle("distance between focal juveniles") +
-  theme_clean() + 
-  scale_size_continuous(range = c(2,6))
-
+df_avg %$% 
+  lmp(pairewise_distance_juvs ~ treatment, data = .) %>% 
+  glht(linfct=mcp(treatment="Tukey")) %>% 
+  summary
 
 df_avg %>%
   group_by(treatment) %>% 
@@ -548,6 +555,11 @@ df_avg %>%
   ggtitle("distance between large / intermediate males") +
   theme_clean()
 
+df_avg %$% 
+  lmp(pairwise_distance_large_males ~ treatment, data = .) %>% 
+  glht(linfct=mcp(treatment="Tukey")) %>% 
+  summary
+
 ggplot(df_avg, aes(total_courtship, total_aggression)) + 
   geom_point() + 
   facet_wrap(~ treatment) +
@@ -556,6 +568,10 @@ ggplot(df_avg, aes(total_courtship, total_aggression)) +
   xlab("total # courtship events") +
   ylab("total # aggressive events") +
   geom_smooth(se=F)
+  
+  df_avg %$% 
+  lmp(total_aggression ~ total_courtship * treatment, data = .)  %>% 
+  anova
 
 
 df %>%
@@ -567,6 +583,11 @@ df %>%
   ylab("# pixels") +
   ggtitle("distance between model females") +
   theme_clean()
+  
+  df_avg %$% 
+  lmp(pairwise_distance_females ~ treatment, data = .) %>% 
+  glht(linfct=mcp(treatment="Tukey")) %>% 
+  summary
 
 ggplot(df_avg, aes(pairewise_distance_juvs, pairwise_distance_females)) + 
   geom_point() + 
