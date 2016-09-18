@@ -280,6 +280,62 @@ df_avg$date %<>% as.Date(format = "%m-%d-%Y")
 
 # visualizing the dataset
 
+We can use the function define below to (1) do a permutational ANOVA, (2) do Tukey post-hoc testing, and (3) add labels to the plots showing which groups are signficantly different from other groups:
+
+```{r}
+
+generate_label_df <- function(x, y, dataframe, label_height){
+  require(lmPerm)
+  require(multcompView)
+  arguments <- as.list(match.call())
+  # do the anova
+  model <- aovp(eval(arguments$y, dataframe) ~ eval(arguments$x, dataframe), data = dataframe)
+  HSD <- TukeyHSD(model, ordered = FALSE, conf.level = 0.95)
+  print(HSD)
+  
+  # Extract labels and factor levels from Tukey post-hoc 
+  Tukey.levels <- HSD[[1]][,4]
+  Tukey.labels <- multcompLetters(Tukey.levels)['Letters']
+  plot.labels <- names(Tukey.labels[['Letters']])
+  
+  ## get the max value for each group
+  ## need to revise to go something like this 
+  boxplot.df <- dataframe %>%
+    group_by(eval(arguments$x, dataframe)) %>%
+    summarise(height = fivenum(eval(arguments$y, dataframe))[5])
+  names(boxplot.df)[1] <- "plot.labels"
+  # in this function
+  
+  # boxplot.df <- data.frame(plot.labels,
+  #                          height = label_height)
+  print(boxplot.df)
+  # Create a data frame out of the factor levels and Tukey's homogenous group letters
+  plot.levels <- data.frame(plot.labels, 
+                            labels = Tukey.labels[['Letters']],
+                            stringsAsFactors = FALSE)
+  print(plot.levels)
+  # Merge it with the labels
+  labels.df <- merge(plot.levels, boxplot.df, sort = FALSE)
+  print(labels.df)
+  
+  return(labels.df)
+}
+
+```
+
+Example useage:
+
+```{r, eval = FALSE}
+ggplot(df_avg, aes(y=total_courtship, x=treatment)) + 
+  geom_boxplot() +
+  geom_text(data = generate_label_df(x = treatment, y = total_courtship,df_avg), 
+            aes(x = plot.labels, y = height, label = labels)
+  ) +
+  theme_minimal()
+
+
+```
+
 
 ## time trends
 
