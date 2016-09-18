@@ -282,11 +282,15 @@ df_avg$date %<>% as.Date(format = "%m-%d-%Y")
 
 We can use the function define below to (1) do a permutational ANOVA, (2) do Tukey post-hoc testing, and (3) add labels to the plots showing which groups are signficantly different from other groups:
 
+(things to add: overall anova significance)
+
 ```{r}
 
-generate_label_df <- function(x, y, dataframe, label_height){
+
+generate_label_df <- function(x, y, dataframe){
   require(lmPerm)
   require(multcompView)
+  require(magrittr)
   arguments <- as.list(match.call())
   # do the anova
   model <- aovp(eval(arguments$y, dataframe) ~ eval(arguments$x, dataframe), data = dataframe)
@@ -300,10 +304,21 @@ generate_label_df <- function(x, y, dataframe, label_height){
   
   ## get the max value for each group
   ## need to revise to go something like this 
-  boxplot.df <- dataframe %>%
-    group_by(eval(arguments$x, dataframe)) %>%
-    summarise(height = fivenum(eval(arguments$y, dataframe))[5])
-  names(boxplot.df)[1] <- "plot.labels"
+  # boxplot.df <- dataframe %>%
+  #   group_by(eval(arguments$x, dataframe)) %>%
+  #   summarise(height = max(eval(arguments$y, dataframe), na.rm = T))
+  
+  boxplot.df <- split(dataframe, eval(arguments$x, dataframe)) %>%
+    lapply(., function(z) eval(arguments$y, z)) %T>% print %>%
+    lapply(., max, na.rm=T) %>%
+    unlist %>%
+    add(((range(.)[2] - range(.)[1])*0.05))
+  print(boxplot.df)
+  boxplot.df <- data.frame(
+    height = boxplot.df,
+    names(boxplot.df)
+  )
+  names(boxplot.df)[2] <- "plot.labels"
   # in this function
   
   # boxplot.df <- data.frame(plot.labels,
