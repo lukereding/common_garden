@@ -146,7 +146,7 @@ class get_behaviors:
         comments = self.E11.get()
         observer = self.E15.get()
         small_vs_small = self.E16.get()
-        #master.quit()
+        master.quit
 
 # to get frame to use for identifying the fish from the user; return the number of the frame to use
 def get_frame(name, rotate):
@@ -360,7 +360,7 @@ def show_video(name):
             k = cv2.waitKey(20)
             if k == 27:
                 break
-            elif k == ord('a'):
+            elif k == 114:
                 rotate = False if rotate is True else True
 
     # When everything done, release the capture
