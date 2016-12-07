@@ -52,7 +52,7 @@ else
 fi
 
 # update the log file
-touch "$1"/"$LOGFILE"
+#touch "$1"/"$LOGFILE"
 
 if [ $? -eq 0 ]; then
     echo -e "\n\ndone creating videos. "$1"/"$LOGFILE" was updated."
