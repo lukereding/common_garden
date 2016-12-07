@@ -3,13 +3,13 @@ title: "common garden tank analysis"
 author: "luke reding"
 date: "November 8, 2016"
 output:
-  html_document:
-    toc: yes
   html_notebook:
     fig_height: 8
     fig_width: 8
     highlight: tango
     theme: journal
+    toc: yes
+  html_document:
     toc: yes
 ---
 
@@ -240,7 +240,12 @@ Note that I use `rowwise` here combined with `sum` inside `mutate` and (importan
 df %<>% rowwise %>% mutate(total_courtship =sum(large_courting, small_courting ,intermediate_courting, na.rm=TRUE))
 
 # get overall (total) aggression
-df %<>% rowwise %>% mutate(total_aggression = sum(large_vs_large, large_vs_small, int_vs_int, large_vs_female, int_vs_female, female_vs_female, female_vs_male, na.rm= TRUE))
+df %<>% rowwise %>% mutate(total_aggression = sum(large_vs_large, large_vs_small, int_vs_int, large_vs_female, int_vs_female, female_vs_female, female_vs_male, small_vs_female, na.rm= TRUE))
+
+# get aggression towards females and aggressive towards males
+df %<>% 
+  mutate(aggression_towards_females_by_males = sum(large_vs_female, int_vs_female, small_vs_female, na.rm= TRUE),
+         aggression_towards_males_by_males = sum(large_vs_large, large_vs_small, int_vs_int, na.rm= TRUE))
 
 df %<>% ungroup # ungroup by row
 
@@ -426,7 +431,7 @@ HSD <- TukeyHSD(model, ordered = FALSE, conf.level = 0.95)
 
 Example useage:
 
-```{r, eval = FALSE}
+```{r}
 
 ggplot(df_avg, aes(y=total_courtship, x=treatment)) + 
   geom_boxplot() +
@@ -488,7 +493,7 @@ ggplot(df_avg, aes(date, total_aggression, color = treatment)) +
 ```
 
 
-```{r, fig.}
+```{r}
 ggplot(df_avg, aes(date, total_courtship, color = treatment)) + 
   # geom_line(size=1.25, position = position_dodge(width=3)) +
   theme_clean() + 
@@ -854,6 +859,35 @@ df_avg %>%
   ggtitle("average # of small -> female aggressions") +
   theme_clean() +
   ylim(0, 4)
+
+
+df_avg %>%
+  ggplot(aes(treatment, aggression_towards_females_by_males)) +
+  geom_boxplot(aes(fill=treatment), outlier.shape=NA) +
+  # geom_jitter(width=0.2, height=0) +
+  geom_sina()+
+  scale_fill_world(guide = F) +
+  ylab("# chases towards females") +
+  ggtitle("average # of males -> female aggressions") +
+  theme_clean() +
+  ylim(0, 4) +
+  geom_text(data = generate_label_df(x = treatment, y = aggression_towards_females_by_males, df_avg), 
+            aes(x = plot.labels, y = height, label = labels),
+            size = 7, vjust = -0.2)
+
+df_avg %>%
+  ggplot(aes(treatment, aggression_towards_males_by_males)) +
+  geom_boxplot(aes(fill=treatment), outlier.shape=NA) +
+  # geom_jitter(width=0.2, height=0) +
+  geom_sina()+
+  scale_fill_world(guide = F) +
+  ylab("# chases towards females") +
+  ggtitle("average # of males -> female aggressions") +
+  theme_clean() +
+  ylim(0, 4) +
+  geom_text(data = generate_label_df(x = treatment, y = aggression_towards_males_by_males, df_avg), 
+            aes(x = plot.labels, y = height, label = labels),
+            size = 7, vjust = -0.2)
 ```
 
 
