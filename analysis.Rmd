@@ -118,6 +118,56 @@ theme_clean <- function(font_size = 14, font_family = "", line_size = .5) {
                                        margin = ggplot2::margin(b = half_line))
     )
 }
+# 
+# theme_mod <- function(font_size = 14, font_family = "", line_size = .5) {
+#   half_line <- font_size / 2
+#   small_rel <- 0.8
+#   small_size <- small_rel * font_size
+# 
+#   theme_grey(base_size = font_size, base_family = font_family) %+replace%
+#     theme(
+#       rect              = element_rect(fill = "transparent", colour = NA, color = NA, size = 0, linetype = 0),
+#       text              = element_text(family = font_family, face = "plain", colour = "black",
+#                                        size = font_size, hjust = 0.5, vjust = 0.5, angle = 0, lineheight = .9,
+#                                        margin = ggplot2::margin(), debug = FALSE),
+#       axis.text         = element_text(colour = "black", size = small_size),
+#       #axis.title        = element_text(face = "bold"),
+#       axis.text.x       = element_text(margin = ggplot2::margin(t = small_size / 4), vjust = 1),
+#       axis.text.y       = element_text(margin = ggplot2::margin(r = small_size / 4), hjust = 1),
+#       axis.title.x      = element_text(size = font_size*0.9,
+#         margin = ggplot2::margin(t = small_size / 3, b = small_size / 4)
+#       ),
+#       axis.title.y      = element_text(size = font_size*0.9,
+#         angle = 90,
+#         margin = ggplot2::margin(r = small_size / 3, l = small_size / 4),
+#       ),
+#       axis.ticks        = element_line(colour = "black", size = line_size),
+#       axis.line         = element_line(colour = "black", size = line_size),
+#       # the following two lines are not needed for ggplot2 2.2.0 or later
+#       axis.line.x         = element_line(colour = "black", size = line_size),
+#       axis.line.y         = element_line(colour = "black", size = line_size),
+#       legend.key        = element_blank(),
+#       legend.key.size   = grid::unit(1, "lines"),
+#       legend.text       = element_text(size = rel(small_rel)),
+#       #    legend.position   = c(-0.03, 1.05),
+#       #    legend.justification = c("left", "top"),
+#       panel.background  = element_blank(),
+#       panel.border      = element_blank(),
+#       panel.grid.major  = element_blank(),
+#       panel.grid.minor  = element_blank(),
+#       strip.text        = element_text(size = rel(small_rel)),
+#       strip.background  = element_blank(),
+#       plot.background   = element_blank(),
+#       plot.title        = element_text(face = "plain",
+#                                        size = font_size,
+#                                        margin = ggplot2::margin(b = half_line), hjust = 0),
+# 
+#       complete = TRUE
+#     )
+# }
+
+require(ggthemes)
+theme_set(theme_clean())
 
 ```
 
@@ -436,8 +486,7 @@ Example useage:
 ggplot(df_avg, aes(y=total_courtship, x=treatment)) + 
   geom_boxplot() +
   geom_text(data = generate_label_df(x = treatment, y = total_courtship,df_avg), 
-            aes(x = plot.labels, y = height, label = labels), vjust = -1) +
-  theme_minimal() 
+            aes(x = plot.labels, y = height, label = labels), vjust = -1)
 
 
 ```
@@ -1241,7 +1290,7 @@ x
 
 
 ```{r include=FALSE}
-
+require(cowplot)
 df_avg$treatment %<>% factor(levels = c("LS", "SS", "LL","FF","INT"))
 cols <- c("#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7", "#999999", "#E69F00")
 
@@ -1274,7 +1323,115 @@ towards_females <- df_avg %>%
 (x <- plot_grid(courts, towards_females, labels=c("a","b")))
 x
 
+
+
+```
+
+
+```{r}
 # as bar plot (for DDIG)
+theme_mod <- function(font_size = 16, font_family = "", line_size = .5) {
+  half_line <- 9
+  small_rel <- 0.8
+  small_size <- small_rel * font_size
+  
+  theme_tufte(base_size = font_size, base_family = font_family) %+replace%
+    theme(
+      rect              = element_rect(fill = "transparent", colour = NA, color = NA, size = 0, linetype = 0),
+      text              = element_text(family = font_family, face = "plain", colour = "black",
+                                       size = font_size, hjust = 0.5, vjust = 0.5, angle = 0, lineheight = .9,
+                                       margin = ggplot2::margin(), debug = FALSE),
+      axis.text         = element_text(colour = "black", size = small_size),
+      #axis.title        = element_text(face = "bold"),
+      axis.text.x       = element_text(margin = ggplot2::margin(t = small_size / 4), vjust = 1),
+      axis.text.y       = element_text(margin = ggplot2::margin(r = small_size / 4), hjust = 1),
+      axis.title.x      = element_text(
+        margin = ggplot2::margin(t = small_size / 2, b = small_size / 4)
+      ),
+      axis.title.y      = element_text(
+        angle = 90,
+        size = font_size * 0.8,
+        margin = ggplot2::margin(r = small_size / 2, l = small_size / 4),
+      ),
+      axis.ticks        = element_line(colour = "black", size = line_size),
+      axis.line.x       = element_line(colour = "black", size = line_size),
+      axis.line.y       = element_line(colour = "black", size = line_size),
+      legend.key        = element_blank(),
+      legend.margin     = grid::unit(0.1, "cm"),
+      legend.key.size   = grid::unit(1, "lines"),
+      legend.text       = element_text(size = rel(small_rel*0.7)),
+      legend.title      = element_text(size=rel(small_rel*0.7)),
+      #    legend.position   = c(-0.03, 1.05),
+      # legend.justification = c("left", "right"),
+      panel.background  = element_blank(),
+      panel.border      = element_blank(),
+      panel.grid.major  = element_blank(),
+      panel.grid.minor  = element_blank(),
+      strip.text        = element_text(size = rel(small_rel)),
+      strip.background  = element_rect(fill="#00000020"),
+      plot.background   = element_blank(),
+      plot.title        = element_text(face = "plain",
+                                       size = font_size,
+                                       margin = ggplot2::margin(b = half_line), hjust = 0)
+    )
+}
+
+require(ggthemes)
+limits <- aes(ymax = avg_court + se_court, ymin=avg_court - se_court)
+  courts <- df_avg %>%
+    mutate(aggresion_towards_females = large_vs_female + small_vs_female + int_vs_female) %>%
+    group_by(treatment) %>%
+    summarize(avg_court = mean(total_courtship, na.rm=T), se_court = sd(total_courtship, na.rm=T) / n(), sd_court = sd(total_courtship, na.rm=T) ) %>%
+    # filter(treatment != "INT") %>%
+    ggplot(aes(treatment, avg_court)) +
+    geom_bar(aes(fill=treatment), stat = "identity") +
+    # geom_jitter(width=0.3, height=0.15, aes(size = aggresion_towards_females)) +
+    scale_fill_world(guide=F) + 
+    # scale_size(name = "chases towards\nfemales") + 
+    ylab("average # courtship\nevents per video") +
+    # ggtitle("number of courtship events per video") +
+    theme_mod() +
+    # ylim(c(0,2)) +
+    scale_x_discrete(breaks=c("LS","SS","LL", "FF", "INT"),
+          labels=c("large and small males", "only small males", "only large males", "only females", "only intermediate males")) +
+    ggtitle("amount of courtship") +
+    theme(axis.text.x=element_text(angle=45, hjust=1)) +
+    geom_errorbar(limits, position=position_dodge(width=0.9), width=0.1)
+  
+  limits <- aes(ymax = avg_coerse + se_coerse, ymin=avg_coerse - se_coerse)
+  cosersion <- df_avg %>%
+    mutate(coerse = small_vs_female + int_vs_female) %>%
+    group_by(treatment) %>%
+    summarize(avg_coerse = mean(coerse, na.rm=T), se_coerse = sd(coerse, na.rm=T) / n()) %>%
+    # filter(treatment != "INT") %>%
+    ggplot(aes(treatment, avg_coerse)) +
+    geom_bar(aes(fill=treatment), stat = "identity") +
+    # geom_jitter(width=0.3, height=0.15, aes(size = aggresion_towards_females)) +
+    scale_fill_world(guide=F) + 
+    # scale_size(name = "chases towards\nfemales") + 
+    ylab("average # coersion\nattempts per video") +
+    # ggtitle("number of courtship events per video") +
+    theme_mod() +
+    scale_x_discrete(breaks=c("LS","SS","LL", "FF", "INT"),
+          labels=c("large and small males", "only small males", "only large males", "only females", "only intermediate males")) +
+    ylim(c(0,1)) +
+    ggtitle("amount of coersion") +
+    theme(axis.text.x=element_text(angle=45, hjust=1)) +
+    geom_errorbar(limits, position=position_dodge(width=0.9), width=0.1)
+  
+  
+  (x <- plot_grid(courts, cosersion, labels=c("a","b")))
+  
+  x
+```
+
+
+
+
+```{r fig.width = 3, fig.height=6}
+# as bar plot (for grants Jan 2017)
+
+cols <- c("#6A2C70","#B83B5E", "#F08A5D", "#FFDC2B", "black")
 
 theme_mod <- function(font_size = 16, font_family = "", line_size = .5) {
   half_line <- 9
@@ -1296,6 +1453,7 @@ theme_mod <- function(font_size = 16, font_family = "", line_size = .5) {
       ),
       axis.title.y      = element_text(
         angle = 90,
+        size = font_size * 0.8,
         margin = ggplot2::margin(r = small_size / 2, l = small_size / 4),
       ),
       axis.ticks        = element_line(colour = "black", size = line_size),
@@ -1315,57 +1473,64 @@ theme_mod <- function(font_size = 16, font_family = "", line_size = .5) {
       strip.text        = element_text(size = rel(small_rel)),
       strip.background  = element_rect(fill="#00000020"),
       plot.background   = element_blank(),
-      plot.title        = element_text(face = "bold",
+      plot.title        = element_text(face = "plain",
                                        size = font_size,
-                                       margin = ggplot2::margin(b = half_line))
+                                       margin = ggplot2::margin(b = half_line), hjust = 0)
     )
 }
+
 
 require(ggthemes)
 limits <- aes(ymax = avg_court + se_court, ymin=avg_court - se_court)
   courts <- df_avg %>%
     mutate(aggresion_towards_females = large_vs_female + small_vs_female + int_vs_female) %>%
     group_by(treatment) %>%
-    summarize(avg_court = mean(total_courtship, na.rm=T), se_court = sd(total_courtship, na.rm=T) / n(), sd_court = sd(total_courtship, na.rm=T) ) %>%
-    filter(treatment != "INT") %>%
+    summarize(avg_court = mean(total_courtship, na.rm=T) * 4, se_court = sd(total_courtship, na.rm=T) / n(), sd_court = sd(total_courtship, na.rm=T) ) %>%
+    # filter(treatment != "INT") %>%
     ggplot(aes(treatment, avg_court)) +
     geom_bar(aes(fill=treatment), stat = "identity") +
     # geom_jitter(width=0.3, height=0.15, aes(size = aggresion_towards_females)) +
-    scale_fill_manual(values=cols[c(4,5,2,7)], guide=F) + 
+    scale_fill_manual(guide=F, values = cols) + 
     # scale_size(name = "chases towards\nfemales") + 
-    ylab("average # courtships per video") +
+    ylab("average # courtship\nevents per minute") +
     # ggtitle("number of courtship events per video") +
     theme_mod() +
     # ylim(c(0,2)) +
-    scale_x_discrete(breaks=c("LS","SS","LL", "FF"),
-          labels=c("large and small males", "only small males", "only large males", "only females")) +
+    scale_x_discrete(breaks=c("LS","SS","LL", "FF", "INT"),
+          labels=c("large and small males", "only small males", "only large males", "only females", "only intermediate males")) +
     ggtitle("amount of courtship") +
     theme(axis.text.x=element_text(angle=45, hjust=1)) +
-    geom_errorbar(limits, position=position_dodge(width=0.9), width=0.1)
+    theme(axis.text.x = element_blank()) +
+    theme(axis.title.x = element_blank()) +
+    geom_errorbar(limits, position=position_dodge(width=0.9), width=0.1)+
+    theme(axis.ticks.x = element_blank())
   
   limits <- aes(ymax = avg_coerse + se_coerse, ymin=avg_coerse - se_coerse)
   cosersion <- df_avg %>%
     mutate(coerse = small_vs_female + int_vs_female) %>%
     group_by(treatment) %>%
-    summarize(avg_coerse = mean(coerse, na.rm=T), se_coerse = sd(coerse, na.rm=T) / n()) %>%
-    filter(treatment != "INT") %>%
+    summarize(avg_coerse = mean(coerse, na.rm=T) *4, se_coerse = sd(coerse, na.rm=T) / n()) %>%
+    # filter(treatment != "INT") %>%
     ggplot(aes(treatment, avg_coerse)) +
     geom_bar(aes(fill=treatment), stat = "identity") +
     # geom_jitter(width=0.3, height=0.15, aes(size = aggresion_towards_females)) +
-    scale_fill_manual(values=cols[c(4,5,2,7)], guide=F) + 
+    scale_fill_manual(guide=F, values = cols) + 
     # scale_size(name = "chases towards\nfemales") + 
-    ylab("average # coersion attempts per video") +
+    ylab("average # coersion\nattempts per minute") +
     # ggtitle("number of courtship events per video") +
     theme_mod() +
-    scale_x_discrete(breaks=c("LS","SS","LL", "FF"),
-          labels=c("large and small males", "only small males", "only large males", "only females")) +
-    ylim(c(0,1)) +
+    scale_x_discrete(breaks=c("LS","SS","LL", "FF", "INT"),
+          labels=c("large and small males", "only small males", "only large males", "only females", "only intermediate males")) +
     ggtitle("amount of coersion") +
-    theme(axis.text.x=element_text(angle=45, hjust=1)) +
-    geom_errorbar(limits, position=position_dodge(width=0.9), width=0.1)
+    theme(axis.text.x=element_text(angle=30, hjust=1)) +
+    geom_errorbar(limits, position=position_dodge(width=0.9), width=0.1) +
+    theme(axis.ticks.x = element_blank()) +
+    theme(axis.text.x = element_text(size = 12))
   
   
-  (x <- plot_grid(courts, cosersion, labels=c("a","b")))
+  (x <- plot_grid(courts, cosersion, align = "v", ncol = 1, labels=c("a","b"), rel_heights = c(1,1.5)))
   
   x
+  
+  ggsave("~/Desktop/ios_grant/cg_fig.pdf", height = 6, width = 3)
 ```
