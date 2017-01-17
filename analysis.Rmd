@@ -381,7 +381,7 @@ df %<>%
   )) 
 
 # reorder treatments
-df$treatment %<>% factor(levels = c("LL", "LS", "SS", "INT", "FF"))
+df$treatment %<>% factor(levels = c("LS", "INT", "LL", "SS", "FF"))
 
 
 # to get the sum total of each behavior for each day
@@ -408,7 +408,7 @@ df %<>%
   group_by(id) %>% 
   summarise_each(funs(if(is.numeric(.)) sum(., na.rm = TRUE) else first(.)))
 
-
+write_csv(df_avg, "~/Documents/common_garden/df.csv")
 ```
 
 
@@ -1242,39 +1242,38 @@ towards_females <- df %>%
 
 (x <- plot_grid(courts, towards_females, labels = c("a","b")))
 
+```
 
+```{r}
 
-# as bar plot (for DDIG)
-df$treatment <- factor(df$treatment, levels = c("LS", "SS", "LL","FF","INT"))
+# as bar plot
+df$treatment <- factor(df$treatment, levels = c("LS", "INT", "SS", "LL","FF"))
 require(ggthemes)
 courts <- df %>%
   filter(good_video == TRUE) %>%
   mutate(aggresion_towards_females = large_vs_female + small_vs_female + int_vs_female) %>%
   group_by(treatment) %>%
   summarize(avg_court = mean(total_courtship, na.rm=T)) %>%
-  filter(treatment != "INT") %>%
   ggplot(aes(treatment, avg_court)) +
   geom_bar(aes(fill=treatment), stat = "identity") +
   # geom_jitter(width=0.3, height=0.15, aes(size = aggresion_towards_females)) +
-  scale_fill_world(guide = F) + 
+  scale_fill_manual(values=c("darkorchid4","darkorchid4",rep("grey50",3)), guide=F) +  
   # scale_size(name = "chases towards\nfemales") + 
   ylab("average # courtships per video") +
   # ggtitle("number of courtship events per video") +
   theme_clean() +
   ylim(0,6) +
-  ggtitle("courtship") +
-  theme(axis.text.x=element_text(angle=45, hjust=1))
+  ggtitle("courtship")
 
 cosersion <- df %>%
   filter(good_video == TRUE) %>%
   mutate(aggresion_towards_females =  + small_vs_female + int_vs_female) %>%
   group_by(treatment) %>%
   summarize(avg_coerse = mean(aggresion_towards_females, na.rm=T)) %>%
-  filter(treatment != "INT") %>%
   ggplot(aes(treatment, avg_coerse)) +
   geom_bar(aes(fill=treatment), stat = "identity") +
   # geom_jitter(width=0.3, height=0.15, aes(size = aggresion_towards_females)) +
-  scale_fill_world(guide = F) + 
+  scale_fill_manual(values=c("darkorchid4","darkorchid4",rep("grey50",3)), guide=F) + 
   # scale_size(name = "chases towards\nfemales") + 
   ylab("average # coersions per video") +
   # ggtitle("number of courtship events per video") +
@@ -1533,4 +1532,59 @@ limits <- aes(ymax = avg_court + se_court, ymin=avg_court - se_court)
   x
   
   ggsave("~/Desktop/ios_grant/cg_fig.pdf", height = 6, width = 3)
+```
+
+```{r fig.width = 3, fig.height=6}
+# for mary's grant, january 2017
+
+# df_avg <- read_csv("~/Documents/common_garden/df.csv")
+
+# df_avg$treatment %<>% factor(.,levels = c("LS", "INT", "LL", "SS", "FF"))
+
+require(cowplot)
+
+limits <- aes(ymax = avg_court + se_court, ymin=avg_court - se_court)
+  courts <- df_avg %>%
+    group_by(treatment) %>%
+    summarize(avg_court = mean(total_courtship, na.rm=T) * 4, se_court = sd(total_courtship, na.rm=T) / n(), sd_court = sd(total_courtship, na.rm=T) ) %>%
+    ggplot(aes(treatment, avg_court)) +
+    geom_bar(aes(fill=treatment), stat = "identity") +
+    # geom_jitter(width=0.3, height=0.15, aes(size = aggresion_towards_females)) +
+    scale_fill_manual(values=c("darkorchid4","darkorchid4",rep("grey50",3)), guide=F) +  
+    # scale_size(name = "chases towards\nfemales") + 
+    ylab("average # courtship\nevents per minute") +
+    # ggtitle("number of courtship events per video") +
+    theme_mod() +
+    # ylim(c(0,2)) +
+    scale_x_discrete(breaks=c("LS","INT", "LL","SS", "FF"),
+          labels=c("LS", "II", "LL", "SS", "FF")) +
+    ggtitle("amount of courtship") +
+    geom_errorbar(limits, position=position_dodge(width=0.9), width=0.1)+
+    theme(axis.ticks.x = element_blank()) +
+    theme(axis.text.x = element_blank()) +
+    theme(axis.title.x = element_blank())
+  
+  limits <- aes(ymax = avg_coerse + se_coerse, ymin=avg_coerse - se_coerse)
+  cosersion <- df_avg %>%
+    mutate(coerse = small_vs_female + int_vs_female) %>%
+    group_by(treatment) %>%
+    summarize(avg_coerse = mean(coerse, na.rm=T) *4, se_coerse = sd(coerse, na.rm=T) / n()) %>%
+    # filter(treatment != "INT") %>%
+    ggplot(aes(treatment, avg_coerse)) +
+    geom_bar(aes(fill=treatment), stat = "identity") +
+    # geom_jitter(width=0.3, height=0.15, aes(size = aggresion_towards_females)) +
+    scale_fill_manual(values=c("darkorchid4","darkorchid4",rep("grey50",3)), guide=F) +   
+    # scale_size(name = "chases towards\nfemales") + 
+    ylab("average # coersion\nattempts per minute") +
+    # ggtitle("number of courtship events per video") +
+    theme_mod() +
+     scale_x_discrete(breaks=c("LS","INT", "LL","SS", "FF"),
+          labels=c("LS", "II", "LL", "SS", "FF")) +
+    ggtitle("amount of coersion") +
+    geom_errorbar(limits, position=position_dodge(width=0.9), width=0.1) +
+    theme(axis.ticks.x = element_blank())
+  
+  
+  (x <- plot_grid(courts, cosersion, align = "v", ncol = 1, labels=c("a","b"), rel_heights = c(1,1.2)))
+  ggsave("~/Desktop/cg_fig_4_mary.pdf", height = 6, width = 3)
 ```
