@@ -5,9 +5,9 @@ from math import sqrt
 import json
 import os.path
 import os
-from Tkinter import *
-from tkFileDialog import askopenfilename
-import tkMessageBox
+from tkinter import *
+from tkinter import messagebox
+from tkinter import filedialog
 
 '''
 
@@ -23,7 +23,7 @@ class get_video:
 
         def callback(self):
             global video_name
-            video_name = self.askopenfilename()
+            video_name = self.filedialog.askopenfilename()
         global video_name
         self.master = master
         master.title("please choose the video file")
@@ -33,7 +33,7 @@ class get_video:
 
         self.quit_button = Button(text='Close after file is chosen', command=master.quit).pack()
 
-        video_name = askopenfilename()
+        video_name = filedialog.askopenfilename()
 
 # class to create window to collect behavior observations from user
 class get_behaviors:
@@ -219,9 +219,9 @@ if __name__ == "__main__":
         print(save_to)
 
         os.rename(video_name, os.path.join(save_to, video))
-        tkMessageBox.showinfo("oh yeahhh","\n\nall done. wahoo!\nthe data has been saved at {}".format(data_dir + '/' + name))
+        messagebox.showinfo("oh yeahhh","\n\nall done. wahoo!\nthe data has been saved at {}".format(data_dir + '/' + name))
     except:
         print("oh no! problem writing the data file. See Luke.")
-        tkMessageBox.showinfo("oh no!","oh no! problem writing the data file. See Luke.")
+        messagebox.showinfo("oh no!","oh no! problem writing the data file. See Luke.")
 
     cv2.destroyAllWindows()
