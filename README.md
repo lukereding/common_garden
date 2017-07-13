@@ -34,15 +34,11 @@ Used to record (1) positions of different types of fish in the tank and (2) beha
 
 ### `foraging_activity.py`
 
-This is the Python script that defines the program for logging foraging and activity measures. Note that it's written in Python 2.7 and some small tweaks are required to get it working on Python 3 (the initial commit of this file is Python 3).
-
-It's written with Python 2 because all my machines that run Python 3 have Python installed via `conda`, and there are some problems getting pyinstaller and conda to work well together, an issue that is apparently not resolved and not going to be resolved anytime soon.
-
-Run like `python common_garden.py`. This is equivalent to double-clicking on the common_garden icon.
+This is the Python script that defines the program for logging foraging and activity measures. Written using Python 3; takes minimal tweaking to have it work with Python 2. To run, create a new conda environment with something like `conda create --name common_garden --file environment.yaml`. You'll have to add `conda-forge` as the your top channel with `conda config --add channels conda-forge` and you should be good to go.
 
 ### `foraging_activity`
 
-The executable to run the foraging program. Double click and follow the instructions.
+The executable to run the foraging program. As far as I can tell, does not work. Created with Python 2.7 and PyInstaller. Noteably, PyInstaller and conda's Python do not play nice with each other.
 
 ### `make_videos.sh`
 Used to create 3 10-second videos from the 15 minute videos. Looks like large video files (e.g. ~15 min videos taken from an amazon fire) and extracts 5-sec videos at 1:00, 6:00, and 11:00. It assumes that all your videos are in a single folder with no sub-folders or directories. Spaces in pathnames are allowed.
