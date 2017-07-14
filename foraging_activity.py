@@ -97,7 +97,7 @@ class get_behaviors:
 def show_video(name):
     cap = cv2.VideoCapture(name)
     rotate = False
-    M = cv2.getRotationMatrix2D((960,540), 180, 1.0)
+    M = cv2.getRotationMatrix2D((480,270), 180, 1.0)
     if not cap.isOpened():
       print("Error when reading video")
     else:
@@ -105,13 +105,15 @@ def show_video(name):
             try:
                 # Capture frame-by-frame
                 ret, frame = cap.read()
+                frame = cv2.resize(frame, (960,540))
                 if rotate:
-                    frame = cv2.warpAffine(frame, M, (1920, 1080))
+                    frame = cv2.warpAffine(frame, M, (960, 540))
                 cv2.putText(frame,'press the escape key when done',(20,20), cv2.FONT_HERSHEY_SIMPLEX, 1,(130,130,130),2)
                 cv2.imshow(name,frame)
             except:
                 cap = cv2.VideoCapture(name)
                 ret, frame = cap.read()
+                frame = cv2.resize(frame, (960,540))
                 cv2.imshow(name,frame)
             k = cv2.waitKey(20)
             if k == 27:
@@ -119,7 +121,7 @@ def show_video(name):
             elif k == 114:
                 rotate = False if rotate is True else True
 
-    # When everything done, release the capture
+    # When everything is done, release the capture
     cap.release()
     cv2.destroyAllWindows()
     return rotate
