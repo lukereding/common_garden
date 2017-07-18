@@ -1588,3 +1588,173 @@ limits <- aes(ymax = avg_court + se_court, ymin=avg_court - se_court)
   (x <- plot_grid(courts, cosersion, align = "v", ncol = 1, labels=c("a","b"), rel_heights = c(1,1.2)))
   ggsave("~/Desktop/cg_fig_4_mary.pdf", height = 6, width = 3)
 ```
+
+
+
+
+
+
+
+
+# Looking at foraging and activity levels
+
+First step is to read in the JSON files from the computer where people score these videos:
+
+```bash
+
+# make new directory to contain the JSON files
+mkdir ~/Desktop/json_files
+
+scp lukereding@10.147.45.228:"/Volumes/THE\ MOLLUSK/common\ garden\ vids\ for\ foraging\ scoring/saved_videos_bkp/data/*.json" ~/Desktop/json_files
+
+
+```
+
+Get a list of the files:
+
+```{r}
+
+files <- list.files("~/Desktop/json_files", pattern = "*.json", full.names = T)
+
+length(files)
+
+head(files)
+
+```
+
+```{r}
+
+# helper function: returns NA if the feild doesn't exist, otherwise returns the value
+ret <- function(entry){
+  if(is.null(entry)){
+    return(NA)
+  }
+  else{
+    return(entry)
+  }
+}
+
+library(rjson)
+library(lubridate)
+
+n <- length(files)
+# create data frame
+df <- data.frame("number_foraging_fish" = integer(n),
+                   "number_foraging_events" =integer(n),
+                   "number_active"= integer(n),
+                   "tank_id"= integer(n),
+                   "date"= character(n),
+                   "comments"= character(n),
+                   "video_name"= character(n),
+                   "observer"= character(n),
+                   "time_active"= character(n),
+                 stringsAsFactors=FALSE)
+
+
+# loop through the files
+for(i in 1:length(files)){
+  # read in data
+  json_data <- rjson::fromJSON(file=files[i])
+  # print(i)
+  # extract the data
+  df$number_foraging_fish[i] <-  ret(json_data$number_foraging_fish) %>% as.numeric
+  df$number_foraging_events[i] <-  ret(json_data$number_foraging_events) %>% as.numeric
+  df$number_active[i] <-  ret(json_data$number_active) %>% as.numeric
+  df$tank_id[i] <-  ret(json_data$tank_id) %>% as.character
+  df$date[i] <-  ret(json_data$date) %>% mdy %>% as.character
+  df$comments[i] <-  ret(json_data$comments) %>% as.character
+  df$video_name[i] <-  ret(json_data$video_name) %>% as.character
+  df$observer[i] <-  ret(json_data$observer) %>% as.character
+  df$time_active[i] <-  ret(json_data$time_active) %>% ms %>% period_to_seconds %>% as.numeric
+}
+
+# fix a typo
+df$tank_id[df$tank_id == "LFF2"] = "FF2"
+
+# make a column for treatment
+# df$treatment <- gsub("[[:digit:]]","", df$tank_id)
+
+```
+
+```{r}
+df
+
+```
+
+## transformations
+
+We have our data in a data frame now, but the data are still pretty 'raw'. We need to calculate some things to make these metrics slightly more interpretable. 
+
+```{r}
+require(stringr)
+require(magrittr)
+
+
+df_sum <- df %>%
+  mutate(treatment = tank_id %>%  # make column for treatment
+           str_sub(., 1, str_length(tank_id) - 1),
+         treatment = factor(treatment, levels = c("LL", "LS", "INT", "SS", "FF"))) %>%
+  mutate(time_active_per_fish = as.numeric(time_active) / number_active,
+         foraging_per_fish = number_foraging_events / number_foraging_fish) %>% 
+  group_by(treatment) %>%
+  summarise(
+    time_active_se = sd(as.numeric(time_active), na.rm = T) / n(), 
+    time_active = mean(as.numeric(time_active), na.rm = T),
+    number_foraging_fish_se = sd(number_foraging_fish, na.rm = T) / n(),
+    number_foraging_fish = mean(number_foraging_fish, na.rm = T),
+    number_active_se = sd(number_active, na.rm = T) / n(),
+    number_active = mean(number_active, na.rm = T),
+    time_active_per_fish_se = sd(time_active_per_fish, na.rm = T) / n(),
+    time_active_per_fish = mean(time_active_per_fish, na.rm = T),
+    foraging_per_fish_se = sd(foraging_per_fish, na.rm = T) / n(),
+    foraging_per_fish = mean(foraging_per_fish, na.rm = T)
+  )
+
+
+df_sum
+
+```
+
+
+?? Still need to normalize to 1 min ??
+
+## plot the foraging / activity results
+
+Plot some of the results:
+
+
+```{r fig.height = 8, fig.width = 4}
+
+source("https://raw.githubusercontent.com/lukereding/random_scripts/master/plotting_functions.R")
+
+# time active by treatment
+
+activity <- df_sum %>%
+  ggplot(aes(x = treatment, y = time_active_per_fish)) +
+  geom_col(aes(fill = treatment)) +
+  geom_errorbar(aes(ymin=time_active_per_fish-time_active_per_fish_se, ymax=time_active_per_fish+time_active_per_fish_se), colour="black", width=0) +
+  theme_pubr() +
+  ylab("number of seconds per video per fish") +
+  ggtitle("average time spent active\namong treatments") +
+  scale_fill_world(guide = F)
+  
+
+foraging <- df_sum %>%
+  ggplot(aes(x = treatment, y = foraging_per_fish)) +
+  geom_col(aes(fill = treatment)) +
+  geom_errorbar(aes(ymin=foraging_per_fish-foraging_per_fish_se, ymax=foraging_per_fish+foraging_per_fish_se), colour="black", width=0) +
+  theme_pubr() +
+  ylab("foraging events per video per fish") +
+  ggtitle("average number of foraging events\namong treatments") +
+  scale_fill_world(guide = F)
+
+# plot em
+cowplot::plot_grid(activity, foraging, labels = c("a", "b"), ncol = 1)
+ggsave("~/Desktop/act_and_foraging.pdf", height = 8, width = 5)
+```
+
+
+
+
+
+
