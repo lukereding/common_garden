@@ -148,7 +148,7 @@ def get_creation_time(path):
 
 if __name__ == "__main__":
 
-    # read om the videoname
+    # read in the videoname
     root = Tk()
     # get screen dimensions
     my_gui = get_video(root)
@@ -157,11 +157,11 @@ if __name__ == "__main__":
     root.destroy()
     print("video_name: {}".format(video_name))
 
-    # show the video, on repeat if needed
-    rotate = show_video(video_name)
-
-    # close the windows
-    cv2.destroyAllWindows(); cv2.waitKey(1)
+    # # show the video, on repeat if needed
+    # rotate = show_video(video_name)
+    #
+    # # close the windows
+    # cv2.destroyAllWindows(); cv2.waitKey(1)
 
     root2 = Tk()
     my_gui = get_behaviors(root2)
