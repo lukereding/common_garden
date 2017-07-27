@@ -118,53 +118,6 @@ theme_clean <- function(font_size = 14, font_family = "", line_size = .5) {
                                        margin = ggplot2::margin(b = half_line))
     )
 }
-# 
-# theme_mod <- function(font_size = 14, font_family = "", line_size = .5) {
-#   half_line <- font_size / 2
-#   small_rel <- 0.8
-#   small_size <- small_rel * font_size
-# 
-#   theme_grey(base_size = font_size, base_family = font_family) %+replace%
-#     theme(
-#       rect              = element_rect(fill = "transparent", colour = NA, color = NA, size = 0, linetype = 0),
-#       text              = element_text(family = font_family, face = "plain", colour = "black",
-#                                        size = font_size, hjust = 0.5, vjust = 0.5, angle = 0, lineheight = .9,
-#                                        margin = ggplot2::margin(), debug = FALSE),
-#       axis.text         = element_text(colour = "black", size = small_size),
-#       #axis.title        = element_text(face = "bold"),
-#       axis.text.x       = element_text(margin = ggplot2::margin(t = small_size / 4), vjust = 1),
-#       axis.text.y       = element_text(margin = ggplot2::margin(r = small_size / 4), hjust = 1),
-#       axis.title.x      = element_text(size = font_size*0.9,
-#         margin = ggplot2::margin(t = small_size / 3, b = small_size / 4)
-#       ),
-#       axis.title.y      = element_text(size = font_size*0.9,
-#         angle = 90,
-#         margin = ggplot2::margin(r = small_size / 3, l = small_size / 4),
-#       ),
-#       axis.ticks        = element_line(colour = "black", size = line_size),
-#       axis.line         = element_line(colour = "black", size = line_size),
-#       # the following two lines are not needed for ggplot2 2.2.0 or later
-#       axis.line.x         = element_line(colour = "black", size = line_size),
-#       axis.line.y         = element_line(colour = "black", size = line_size),
-#       legend.key        = element_blank(),
-#       legend.key.size   = grid::unit(1, "lines"),
-#       legend.text       = element_text(size = rel(small_rel)),
-#       #    legend.position   = c(-0.03, 1.05),
-#       #    legend.justification = c("left", "top"),
-#       panel.background  = element_blank(),
-#       panel.border      = element_blank(),
-#       panel.grid.major  = element_blank(),
-#       panel.grid.minor  = element_blank(),
-#       strip.text        = element_text(size = rel(small_rel)),
-#       strip.background  = element_blank(),
-#       plot.background   = element_blank(),
-#       plot.title        = element_text(face = "plain",
-#                                        size = font_size,
-#                                        margin = ggplot2::margin(b = half_line), hjust = 0),
-# 
-#       complete = TRUE
-#     )
-# }
 
 require(ggthemes)
 theme_set(theme_clean())
@@ -174,7 +127,7 @@ theme_set(theme_clean())
 Import json files.
 
 ```{r}
-files <- list.files("/Users/lukereding/Documents/common_garden/data/", pattern = "*.json", full.names = T)
+files <- list.files("/Users/lreding/Documents/common_garden/data/", pattern = "*.json", full.names = T)
 
 length(files)
 ```
@@ -287,7 +240,9 @@ Note that I use `rowwise` here combined with `sum` inside `mutate` and (importan
 
 # get total courtship events:
 # df %<>% mutate(total_courtship = sum(large_courting + small_courting + intermediate_courting, na.rm=TRUE))
-df %<>% rowwise %>% mutate(total_courtship =sum(large_courting, small_courting ,intermediate_courting, na.rm=TRUE))
+df %<>% 
+  rowwise %>%
+  mutate(total_courtship =sum(large_courting, small_courting ,intermediate_courting, na.rm=TRUE))
 
 # get overall (total) aggression
 df %<>% rowwise %>% mutate(total_aggression = sum(large_vs_large, large_vs_small, int_vs_int, large_vs_female, int_vs_female, female_vs_female, female_vs_male, small_vs_female, na.rm= TRUE))
@@ -304,10 +259,11 @@ df %<>% ungroup # ungroup by row
 
 ## look at missing data
 
-```{r}
+```{r fig.height=6, fig.width=6}
 library(visdat)
 
-vis_dat(df) + scale_fill_world()
+vis_dat(df) + 
+  scale_fill_world()
 
 
 ```
@@ -1636,6 +1592,8 @@ ret <- function(entry){
 
 library(rjson)
 library(lubridate)
+library(tidyverse)
+library(magrittr)
 
 n <- length(files)
 # create data frame
@@ -1699,15 +1657,21 @@ df_sum <- df %>%
   group_by(treatment) %>%
   summarise(
     time_active_se = sd(as.numeric(time_active), na.rm = T) / n(), 
+    time_active_sd = sd(as.numeric(time_active), na.rm = T), 
     time_active = mean(as.numeric(time_active), na.rm = T),
     number_foraging_fish_se = sd(number_foraging_fish, na.rm = T) / n(),
+    number_foraging_fish_sd = sd(number_foraging_fish, na.rm = T),
     number_foraging_fish = mean(number_foraging_fish, na.rm = T),
     number_active_se = sd(number_active, na.rm = T) / n(),
+    number_active_sd = sd(number_active, na.rm = T),
     number_active = mean(number_active, na.rm = T),
     time_active_per_fish_se = sd(time_active_per_fish, na.rm = T) / n(),
+    time_active_per_fish_sd = sd(time_active_per_fish, na.rm = T),
     time_active_per_fish = mean(time_active_per_fish, na.rm = T),
+    foraging_per_fish_sd = sd(foraging_per_fish, na.rm = T),
     foraging_per_fish_se = sd(foraging_per_fish, na.rm = T) / n(),
-    foraging_per_fish = mean(foraging_per_fish, na.rm = T)
+    foraging_per_fish = mean(foraging_per_fish, na.rm = T), 
+    total_videos = n()
   )
 
 
@@ -1716,7 +1680,22 @@ df_sum
 ```
 
 
-?? Still need to normalize to 1 min ??
+Still need to normalize to 1 min, so since these videos are 10 seconds, I'll multiply everything by 6:
+
+(Recall that the variance is based on _squared_ deviations from the mean, so we have to multiply the variance by 6^2 = 36 and not 6.)
+
+```{r}
+
+df_sum %<>%
+  mutate(time_active_per_fish_per_minute = time_active_per_fish * 6,
+         time_active_per_fish_per_minute_se = sqrt((time_active_per_fish_sd^2) * 36) / total_videos,
+         foraging_per_fish_per_minute = foraging_per_fish * 6,
+         foraging_per_fish_per_minute_se = sqrt((foraging_per_fish_sd^2) * 36) / total_videos)
+
+
+# write it out
+write_csv(df_sum, "~/Documents/common_garden/forging_activity.csv")
+```
 
 ## plot the foraging / activity results
 
@@ -1728,7 +1707,6 @@ Plot some of the results:
 source("https://raw.githubusercontent.com/lukereding/random_scripts/master/plotting_functions.R")
 
 # time active by treatment
-
 activity <- df_sum %>%
   ggplot(aes(x = treatment, y = time_active_per_fish)) +
   geom_col(aes(fill = treatment)) +
@@ -1738,7 +1716,7 @@ activity <- df_sum %>%
   ggtitle("average time spent active\namong treatments") +
   scale_fill_world(guide = F)
   
-
+# foraging events per treatment
 foraging <- df_sum %>%
   ggplot(aes(x = treatment, y = foraging_per_fish)) +
   geom_col(aes(fill = treatment)) +
@@ -1752,9 +1730,6 @@ foraging <- df_sum %>%
 cowplot::plot_grid(activity, foraging, labels = c("a", "b"), ncol = 1)
 ggsave("~/Desktop/act_and_foraging.pdf", height = 8, width = 5)
 ```
-
-
-
 
 
 
