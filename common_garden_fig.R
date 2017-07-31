@@ -81,7 +81,7 @@ court_plot <- ggplot(courts, aes(treatment, avg_court)) +
   geom_errorbar(aes(ymin = avg_court - se_court, ymax = avg_court + se_court), position=position_dodge(width=0.9), width=0) +
   ylab("events per min.") +
   xlab("") +
-  scale_y_continuous(limits = c(0, 12))+
+  scale_y_continuous(limits = c(0, 13))+
   theme_pubr() +
   scale_fill_world(guide = F) +  
   ggtitle("courtship") +
