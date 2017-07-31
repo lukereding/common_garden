@@ -1570,7 +1570,7 @@ Get a list of the files:
 
 ```{r}
 
-files <- list.files("~/Desktop/json_files", pattern = "*.json", full.names = T)
+files <- list.files("~/Downloads/JSON_files", pattern = "*.json", full.names = T)
 
 length(files)
 
@@ -1653,7 +1653,9 @@ df_sum <- df %>%
            str_sub(., 1, str_length(tank_id) - 1),
          treatment = factor(treatment, levels = c("LL", "LS", "INT", "SS", "FF"))) %>%
   mutate(time_active_per_fish = as.numeric(time_active) / number_active,
-         foraging_per_fish = number_foraging_events / number_foraging_fish) %>% 
+         foraging_per_fish = number_foraging_events / number_foraging_fish) %>% {
+           write_csv(., "~/Documents/common_garden/foraging_activity.csv")
+         } %>%
   group_by(treatment) %>%
   summarise(
     time_active_se = sd(as.numeric(time_active), na.rm = T) / n(), 
@@ -1694,7 +1696,7 @@ df_sum %<>%
 
 
 # write it out
-write_csv(df_sum, "~/Documents/common_garden/forging_activity.csv")
+write_csv(df_sum, "~/Documents/common_garden/forging_activity_summarized.csv")
 ```
 
 ## plot the foraging / activity results
@@ -1731,5 +1733,99 @@ cowplot::plot_grid(activity, foraging, labels = c("a", "b"), ncol = 1)
 ggsave("~/Desktop/act_and_foraging.pdf", height = 8, width = 5)
 ```
 
+---------
+
+### doing the stats
+
+To do the stats, we need the raw data, not that data in a summarized form. We'll re-read in the csv file we saved previously then do the stats tests:
+
+
+
+```{r}
+
+raw <- read_csv("~/Documents/common_garden/foraging_activity.csv") %>%
+  mutate(time_active_per_fish_per_minute = time_active_per_fish * 6,
+         time_foraging_per_fish_per_minute = foraging_per_fish * 6)
+
+## then plot:
+
+generate_label_df <- function(x, y, dataframe){
+  require(lmPerm)
+  require(multcompView)
+  require(magrittr)
+  arguments <- as.list(match.call())
+  # do the anova
+  model <- aov(eval(arguments$y, dataframe) ~ eval(arguments$x, dataframe), data = dataframe)
+  print(anova(model))
+  
+HSD <- TukeyHSD(model, ordered = FALSE, conf.level = 0.95)
+  print(HSD)
+  
+  # Extract labels and factor levels from Tukey post-hoc 
+  Tukey.levels <- HSD[[1]][,4]
+  Tukey.labels <- multcompLetters(Tukey.levels)['Letters']
+  plot.labels <- names(Tukey.labels[['Letters']])
+  
+  boxplot.df <- split(dataframe, eval(arguments$x, dataframe)) %>%
+    lapply(., function(z) eval(arguments$y, z)) %>%
+    lapply(., max, na.rm=T) %>%
+    unlist# %>%
+    #add(((range(.)[2] - range(.)[1])))
+  
+  boxplot.df <- data.frame(
+    height = boxplot.df,
+    names(boxplot.df)
+  )
+  names(boxplot.df)[2] <- "plot.labels"
+
+  # Create a data frame out of the factor levels and Tukey's homogenous group letters
+  plot.levels <- data.frame(plot.labels, 
+                            labels = Tukey.labels[['Letters']],
+                            stringsAsFactors = FALSE)
+  
+  # Merge it with the labels
+  labels.df <- merge(plot.levels, boxplot.df, sort = FALSE)
+  print(labels.df)
+  
+  return(labels.df)
+}
+
+
+
+activity <- raw %>%
+  group_by(treatment) %>% 
+  summarise(avg_activity = mean(time_active_per_fish_per_minute, na.rm = TRUE)) %>%
+  ggplot(aes(x = treatment, y = avg_activity)) +
+  geom_col(aes(fill = treatment)) +
+  #geom_errorbar(aes(ymin=time_active_per_fish-time_active_per_fish_se, ymax=time_active_per_fish+time_active_per_fish_se), colour="black", width=0) +
+  theme_pubr() +
+  ylab("number of seconds per video per fish") +
+  ggtitle("average time spent active\namong treatments") +
+  scale_fill_world(guide = F)+
+  geom_text(data = generate_label_df(x = treatment, y = time_active_per_fish_per_minute, raw), 
+            aes(x = plot.labels, y = height, label = labels))
+
+foraging <- raw %>%
+  group_by(treatment) %>% 
+  summarise(avg_foraging = mean(time_foraging_per_fish_per_minute, na.rm = TRUE)) %>%
+  ggplot(aes(x = treatment, y = avg_foraging)) +
+  geom_col(aes(fill = treatment)) +
+  #geom_errorbar(aes(ymin=time_active_per_fish-time_active_per_fish_se, ymax=time_active_per_fish+time_active_per_fish_se), colour="black", width=0) +
+  theme_pubr() +
+  ylab("number of seconds per video per fish") +
+  ggtitle("average time spent active\namong treatments") +
+  scale_fill_world(guide = F)+
+  geom_text(data = generate_label_df(x = treatment, y = time_foraging_per_fish_per_minute, raw),
+            aes(x = plot.labels, y = height, label = labels)) +
+  geom_text(data = raw %>% group_by(treatment) %>% tally, aes(x = treatment, y = 0.2, label = n))
+  
+```
+
+Example useage:
+
+ggplot(df_avg, aes(y=total_courtship, x=treatment)) + 
+  geom_boxplot() +
+  geom_text(data = generate_label_df(x = treatment, y = total_courtship,df_avg), 
+            aes(x = plot.labels, y = height, label = labels), vjust = -1)
 
 
