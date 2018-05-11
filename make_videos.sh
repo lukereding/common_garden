@@ -27,7 +27,7 @@ else
     # otherwise, a log file already exists, so use the -newer option in find to only update those newer files
 
     # make all the videos from 1 min
-    find "$1" -type f -newer "$1"/"$LOGFILE" -maxdepth 1 -name "*.mp4" -exec bash /Users/lukereding/Documents/common_garden/chop_videos.sh {} 1 \;
+    find "$1" -type f -newer "$1"/"$LOGFILE" -maxdepth 1 -name "*.mp4" -exec bash /Users/lreding/Documents/common_garden/chop_videos.sh {} 1 \;
 
     if [ $? -gt 0 ]; then
         echo "something went wrong with the ffmpeg conversion."
@@ -35,7 +35,7 @@ else
     fi
 
     # make all the videos from 6 min
-    find "$1" -type f -newer "$1"/"$LOGFILE" -maxdepth 1 -name "*.mp4" -exec bash /Users/lukereding/Documents/common_garden/chop_videos.sh {} 6 \;
+    find "$1" -type f -newer "$1"/"$LOGFILE" -maxdepth 1 -name "*.mp4" -exec bash /Users/lreding/Documents/common_garden/chop_videos.sh {} 6 \;
 
     if [ $? -gt 0 ]; then
         echo "something went wrong with the ffmpeg conversion."
@@ -43,7 +43,7 @@ else
     fi
 
     # make all the videos from 11 min
-    find "$1" -type f -newer "$1"/"$LOGFILE" -maxdepth 1 -name "*.mp4" -exec bash /Users/lukereding/Documents/common_garden/chop_videos.sh {} 11 \; 
+    find "$1" -type f -newer "$1"/"$LOGFILE" -maxdepth 1 -name "*.mp4" -exec bash /Users/lreding/Documents/common_garden/chop_videos.sh {} 11 \; 
 
     if [ $? -gt 0 ]; then
         echo "something went wrong with the ffmpeg conversion."
